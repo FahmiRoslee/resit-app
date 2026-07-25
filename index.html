@@ -71,8 +71,60 @@
 
         <!-- Main Content Panes -->
         <main class="app-content">
+            <!-- Auth Gate Screen (Shown when currentUser is null) -->
+            <section id="auth-gate-screen" class="tab-pane active" style="display: block;">
+                <div class="scanner-card" style="max-width: 460px; margin: 1rem auto; text-align: center;">
+                    <div class="logo-icon" style="margin: 0 auto; width: 56px; height: 56px; font-size: 1.8rem;">🧾</div>
+                    <h2>Welcome to ResitKu</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Please log in or create a private account to access your receipt scanner and expense vault.</p>
+
+                    <div style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.3rem; border-radius: 12px; margin-top: 0.5rem;">
+                        <button type="button" id="tab-auth-login" class="nav-link active" style="flex: 1; justify-content: center;">
+                            <i class="fa-solid fa-key"></i> Log In
+                        </button>
+                        <button type="button" id="tab-auth-register" class="nav-link" style="flex: 1; justify-content: center;">
+                            <i class="fa-solid fa-user-plus"></i> Create Account
+                        </button>
+                    </div>
+
+                    <!-- Auth Form 1: Log In -->
+                    <form id="gate-login-form" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.75rem; text-align: left;">
+                        <div class="form-group">
+                            <label for="gate-select-account">Select User Account</label>
+                            <select id="gate-select-account" class="category-select" style="width: 100%;" required>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="gate-login-pin">4-Digit Security PIN</label>
+                            <input type="password" id="gate-login-pin" placeholder="2707" maxlength="4" pattern="[0-9]{4}" required>
+                        </div>
+                        <div id="gate-login-error" style="font-size: 0.78rem; color: var(--accent-rose);"></div>
+                        <button type="submit" class="btn btn-primary" style="padding: 0.8rem; font-size: 0.95rem;">
+                            <i class="fa-solid fa-unlock"></i> Unlock Private Vault
+                        </button>
+                    </form>
+
+                    <!-- Auth Form 2: Register (Hidden by default) -->
+                    <form id="gate-register-form" style="display: none; flex-direction: column; gap: 1rem; margin-top: 0.75rem; text-align: left;">
+                        <div class="form-group">
+                            <label for="gate-reg-name">Your Name / Account Name</label>
+                            <input type="text" id="gate-reg-name" placeholder="e.g. Fahmi, Alex, Nenek" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="gate-reg-pin">Create 4-Digit Security PIN</label>
+                            <input type="password" id="gate-reg-pin" placeholder="2707" maxlength="4" pattern="[0-9]{4}" required>
+                        </div>
+                        <div id="gate-reg-error" style="font-size: 0.78rem; color: var(--accent-rose);"></div>
+                        <button type="submit" class="btn btn-primary" style="padding: 0.8rem; font-size: 0.95rem; background: var(--accent-emerald);">
+                            <i class="fa-solid fa-user-check"></i> Register & Unlock Vault
+                        </button>
+                    </form>
+                </div>
+            </section>
+
             <!-- Pane 1: Scanner -->
-            <section id="content-scanner" class="tab-pane active">
+            <section id="content-scanner" class="tab-pane" style="display: none;">
                 <div class="scanner-card">
                     <h2>Scan & Capture Receipt</h2>
                     <p style="font-size: 0.85rem; color: var(--text-muted);">Snap a photo of your physical receipt. Our smart OCR engine will automatically extract the shop name, total amount, date, and category!</p>

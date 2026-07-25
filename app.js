@@ -1,12 +1,4 @@
-// ResitKu - Smart Receipt Scanner & Private Vault Logic
-
-// State Variables
-let currentUser = {
-    id: 'fahmi',
-    name: 'Fahmi',
-    pin: '2707'
-};
-
+let currentUser = null;
 let userReceipts = [];
 let currentScanImageBase64 = null;
 let activeReceiptForModal = null;
@@ -40,6 +32,8 @@ const RETAILERS = [
     { name: 'Decathlon', category: 'shopping' }
 ];
 
+let allUsers = [];
+
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
     setupUserProfile();
@@ -47,161 +41,127 @@ document.addEventListener('DOMContentLoaded', () => {
     setupScannerEvents();
     setupVaultEvents();
     setupExportEvents();
-    loadUserReceipts();
-    renderUI();
 
     const btnSettings = document.getElementById('btn-settings');
     if (btnSettings) {
         btnSettings.addEventListener('click', () => {
-            alert('🔒 Private Vault Active\nStorage: Local Encrypted Engine\nUser: ' + (currentUser ? currentUser.name : 'Guest'));
+            alert('🔒 Private Vault Active\nStorage: Local Encrypted Engine\nUser: ' + (currentUser ? currentUser.name : 'Locked'));
         });
     }
 });
 
-let allUsers = [
-    { id: 'fahmi', name: 'Fahmi', pin: '2707' }
-];
-
-// Setup User Profile & Privacy Isolation
+// Setup User Profile & Privacy Isolation (Auth Gate)
 function setupUserProfile() {
     const savedAll = localStorage.getItem('resit_all_users');
     if (savedAll) {
         try {
             allUsers = JSON.parse(savedAll);
         } catch (e) {
-            allUsers = [{ id: 'fahmi', name: 'Fahmi', pin: '2707' }];
+            allUsers = [];
         }
-    } else {
+    }
+
+    if (!allUsers || allUsers.length === 0) {
+        allUsers = [{ id: 'fahmi', name: 'Fahmi', pin: '2707' }];
         localStorage.setItem('resit_all_users', JSON.stringify(allUsers));
     }
 
-    const savedUser = localStorage.getItem('resit_active_user');
-    if (savedUser) {
+    // Check active session authentication
+    const activeSession = sessionStorage.getItem('resit_active_session');
+    if (activeSession) {
         try {
-            currentUser = JSON.parse(savedUser);
+            currentUser = JSON.parse(activeSession);
         } catch (e) {
-            currentUser = allUsers[0];
+            currentUser = null;
         }
     } else {
-        currentUser = allUsers[0];
-        localStorage.setItem('resit_active_user', JSON.stringify(currentUser));
+        currentUser = null;
     }
 
-    updateUserProfileUI();
-
+    const gateSelectAccount = document.getElementById('gate-select-account');
+    const tabAuthLogin = document.getElementById('tab-auth-login');
+    const tabAuthRegister = document.getElementById('tab-auth-register');
+    const gateLoginForm = document.getElementById('gate-login-form');
+    const gateRegisterForm = document.getElementById('gate-register-form');
     const btnProfile = document.getElementById('btn-user-profile');
-    const profileModal = document.getElementById('user-profile-modal');
-    const closeUserModal = document.getElementById('close-user-modal');
-    const selectAccount = document.getElementById('select-user-account');
-    const loginPinInput = document.getElementById('login-pin-input');
-    const pinError = document.getElementById('pin-login-error');
-    const btnLoginUser = document.getElementById('btn-login-user');
 
-    const btnShowAddUser = document.getElementById('btn-show-add-user');
-    const btnShowResetPin = document.getElementById('btn-show-reset-pin');
-    const addUserForm = document.getElementById('add-user-form');
-    const resetPinForm = document.getElementById('reset-pin-form');
-    const btnCancelAdd = document.getElementById('btn-cancel-add-user');
-    const btnCancelReset = document.getElementById('btn-cancel-reset-pin');
-
-    function populateAccountDropdown() {
-        if (!selectAccount) return;
-        selectAccount.innerHTML = '';
+    function populateGateDropdown() {
+        if (!gateSelectAccount) return;
+        gateSelectAccount.innerHTML = '<option value="">-- Select Account --</option>';
         allUsers.forEach(u => {
             const opt = document.createElement('option');
             opt.value = u.id;
-            opt.textContent = `${u.name} ${u.id === currentUser.id ? '(Current)' : ''}`;
-            if (u.id === currentUser.id) opt.selected = true;
-            selectAccount.appendChild(opt);
+            opt.textContent = u.name;
+            gateSelectAccount.appendChild(opt);
         });
     }
 
-    if (btnProfile) {
-        btnProfile.addEventListener('click', () => {
-            populateAccountDropdown();
-            if (loginPinInput) loginPinInput.value = '';
-            if (pinError) pinError.textContent = '';
-            if (addUserForm) addUserForm.style.display = 'none';
-            if (resetPinForm) resetPinForm.style.display = 'none';
-            profileModal.classList.add('active');
+    populateGateDropdown();
+    updateAuthStateUI();
+
+    // Toggle Gate Tabs (Log In vs Create Account)
+    if (tabAuthLogin && tabAuthRegister) {
+        tabAuthLogin.addEventListener('click', () => {
+            tabAuthLogin.classList.add('active');
+            tabAuthRegister.classList.remove('active');
+            if (gateLoginForm) gateLoginForm.style.display = 'flex';
+            if (gateRegisterForm) gateRegisterForm.style.display = 'none';
+        });
+
+        tabAuthRegister.addEventListener('click', () => {
+            tabAuthRegister.classList.add('active');
+            tabAuthLogin.classList.remove('active');
+            if (gateRegisterForm) gateRegisterForm.style.display = 'flex';
+            if (gateLoginForm) gateLoginForm.style.display = 'none';
         });
     }
 
-    if (closeUserModal) {
-        closeUserModal.addEventListener('click', () => {
-            profileModal.classList.remove('active');
-        });
-    }
-
-    // Login / Unlock Vault Button
-    if (btnLoginUser) {
-        btnLoginUser.addEventListener('click', () => {
-            const targetId = selectAccount.value;
-            const targetUser = allUsers.find(u => u.id === targetId);
-            const enteredPin = loginPinInput ? loginPinInput.value.trim() : '';
-
-            if (!targetUser) return;
-
-            // Verify PIN (accept target pin or 2707)
-            if (enteredPin === targetUser.pin || enteredPin === '2707' || !targetUser.pin) {
-                currentUser = targetUser;
-                localStorage.setItem('resit_active_user', JSON.stringify(currentUser));
-                updateUserProfileUI();
-                loadUserReceipts();
-                renderUI();
-                profileModal.classList.remove('active');
-                if (pinError) pinError.textContent = '';
-                alert(`🔓 Unlocked private vault for ${currentUser.name}!`);
-            } else {
-                if (pinError) pinError.textContent = '❌ Incorrect PIN. Please try again or click Reset PIN.';
-            }
-        });
-    }
-
-    // Toggle Add User Form
-    if (btnShowAddUser) {
-        btnShowAddUser.addEventListener('click', () => {
-            if (addUserForm) addUserForm.style.display = 'flex';
-            if (resetPinForm) resetPinForm.style.display = 'none';
-        });
-    }
-
-    if (btnCancelAdd) {
-        btnCancelAdd.addEventListener('click', () => {
-            if (addUserForm) addUserForm.style.display = 'none';
-        });
-    }
-
-    // Toggle Reset PIN Form
-    if (btnShowResetPin) {
-        btnShowResetPin.addEventListener('click', () => {
-            if (resetPinForm) resetPinForm.style.display = 'flex';
-            if (addUserForm) addUserForm.style.display = 'none';
-        });
-    }
-
-    if (btnCancelReset) {
-        btnCancelReset.addEventListener('click', () => {
-            if (resetPinForm) resetPinForm.style.display = 'none';
-        });
-    }
-
-    // Handle Add User Form Submission
-    if (addUserForm) {
-        addUserForm.addEventListener('submit', (e) => {
+    // Handle Gate Log In Form
+    if (gateLoginForm) {
+        gateLoginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const nameVal = document.getElementById('new-user-name').value.trim();
-            const pinVal = document.getElementById('new-user-pin').value.trim();
+            const targetId = gateSelectAccount ? gateSelectAccount.value : '';
+            const enteredPin = document.getElementById('gate-login-pin').value.trim();
+            const errEl = document.getElementById('gate-login-error');
 
-            if (!nameVal || pinVal.length !== 4) {
-                alert('Please enter a valid user name and 4-digit PIN.');
+            if (!targetId) {
+                if (errEl) errEl.textContent = 'Please select your user account.';
                 return;
             }
 
-            const newId = nameVal.toLowerCase().replace(/\s+/g, '_');
-            const newUser = { id: newId, name: nameVal, pin: pinVal };
+            const targetUser = allUsers.find(u => u.id === targetId);
+            if (!targetUser) return;
 
-            // Check if user already exists
+            if (enteredPin === targetUser.pin || enteredPin === '2707' || !targetUser.pin) {
+                currentUser = targetUser;
+                sessionStorage.setItem('resit_active_session', JSON.stringify(currentUser));
+                if (errEl) errEl.textContent = '';
+                updateAuthStateUI();
+                loadUserReceipts();
+                renderUI();
+                alert(`🔓 Unlocked private vault for ${currentUser.name}!`);
+            } else {
+                if (errEl) errEl.textContent = '❌ Incorrect PIN. Please try again.';
+            }
+        });
+    }
+
+    // Handle Gate Register Form
+    if (gateRegisterForm) {
+        gateRegisterForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const regName = document.getElementById('gate-reg-name').value.trim();
+            const regPin = document.getElementById('gate-reg-pin').value.trim();
+            const errEl = document.getElementById('gate-reg-error');
+
+            if (!regName || regPin.length !== 4) {
+                if (errEl) errEl.textContent = 'Please enter your name and a 4-digit PIN.';
+                return;
+            }
+
+            const newId = regName.toLowerCase().replace(/\s+/g, '_');
+            const newUser = { id: newId, name: regName, pin: regPin };
+
             const existingIdx = allUsers.findIndex(u => u.id === newId);
             if (existingIdx >= 0) {
                 allUsers[existingIdx] = newUser;
@@ -211,49 +171,64 @@ function setupUserProfile() {
 
             localStorage.setItem('resit_all_users', JSON.stringify(allUsers));
             currentUser = newUser;
-            localStorage.setItem('resit_active_user', JSON.stringify(currentUser));
+            sessionStorage.setItem('resit_active_session', JSON.stringify(currentUser));
+            if (errEl) errEl.textContent = '';
 
-            updateUserProfileUI();
+            populateGateDropdown();
+            updateAuthStateUI();
             loadUserReceipts();
             renderUI();
-
-            addUserForm.style.display = 'none';
-            profileModal.classList.remove('active');
-            alert(`🎉 Created & unlocked private account for ${nameVal}!`);
+            alert(`🎉 Created & unlocked private vault for ${regName}!`);
         });
     }
 
-    // Handle Reset PIN Form Submission
-    if (resetPinForm) {
-        resetPinForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newPin = document.getElementById('new-pin-input').value.trim();
-            if (newPin.length !== 4) {
-                alert('Please enter a valid 4-digit PIN.');
-                return;
-            }
-
-            const targetId = selectAccount ? selectAccount.value : currentUser.id;
-            const targetUser = allUsers.find(u => u.id === targetId);
-
-            if (targetUser) {
-                targetUser.pin = newPin;
-                if (targetUser.id === currentUser.id) {
-                    currentUser.pin = newPin;
-                    localStorage.setItem('resit_active_user', JSON.stringify(currentUser));
+    // Lock Session / Switch User Button in Header
+    if (btnProfile) {
+        btnProfile.addEventListener('click', () => {
+            if (currentUser) {
+                const confirmLock = confirm(`Lock vault for ${currentUser.name} and log out?`);
+                if (confirmLock) {
+                    currentUser = null;
+                    sessionStorage.removeItem('resit_active_session');
+                    populateGateDropdown();
+                    updateAuthStateUI();
                 }
-                localStorage.setItem('resit_all_users', JSON.stringify(allUsers));
-                resetPinForm.style.display = 'none';
-                alert(`✅ Successfully updated Security PIN for ${targetUser.name}!`);
+            } else {
+                updateAuthStateUI();
             }
         });
     }
 }
 
-function updateUserProfileUI() {
+function updateAuthStateUI() {
+    const authGateScreen = document.getElementById('auth-gate-screen');
     const badgeName = document.getElementById('user-profile-name');
-    if (badgeName) {
-        badgeName.textContent = `Private Vault: ${currentUser.name}`;
+    const appNav = document.querySelector('.app-nav');
+    const scannerPane = document.getElementById('content-scanner');
+    const vaultPane = document.getElementById('content-vault');
+    const analyticsPane = document.getElementById('content-analytics');
+    const exportPane = document.getElementById('content-export');
+    const btnProfile = document.getElementById('btn-user-profile');
+
+    if (!currentUser) {
+        // Locked State
+        if (authGateScreen) authGateScreen.style.display = 'block';
+        if (appNav) appNav.style.display = 'none';
+        if (scannerPane) scannerPane.style.display = 'none';
+        if (vaultPane) vaultPane.style.display = 'none';
+        if (analyticsPane) analyticsPane.style.display = 'none';
+        if (exportPane) exportPane.style.display = 'none';
+
+        if (badgeName) badgeName.textContent = '🔒 Vault Locked (Log in to access)';
+        if (btnProfile) btnProfile.innerHTML = '<i class="fa-solid fa-lock"></i>';
+    } else {
+        // Unlocked State
+        if (authGateScreen) authGateScreen.style.display = 'none';
+        if (appNav) appNav.style.display = 'flex';
+        if (scannerPane) scannerPane.style.display = 'block';
+
+        if (badgeName) badgeName.textContent = `Private Vault: ${currentUser.name}`;
+        if (btnProfile) btnProfile.innerHTML = '<i class="fa-solid fa-lock-open"></i>';
     }
 }
 
