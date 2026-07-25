@@ -49,6 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setupExportEvents();
     loadUserReceipts();
     renderUI();
+
+    const btnSettings = document.getElementById('btn-settings');
+    if (btnSettings) {
+        btnSettings.addEventListener('click', () => {
+            alert('🔒 Private Vault Active\nStorage: Local Encrypted Engine\nUser: ' + (currentUser ? currentUser.name : 'Guest'));
+        });
+    }
 });
 
 let allUsers = [
@@ -275,15 +282,20 @@ function setupScannerEvents() {
     const dropZone = document.getElementById('drop-zone');
     const saveForm = document.getElementById('save-receipt-form');
 
-    if (browseBtn && fileInput) {
-        browseBtn.addEventListener('click', () => fileInput.click());
-    }
-
     if (dropZone && fileInput) {
         dropZone.addEventListener('click', (e) => {
-            if (e.target !== browseBtn && !browseBtn.contains(e.target)) {
-                fileInput.click();
+            // Prevent double trigger if browseBtn was directly clicked
+            if (e.target === browseBtn || browseBtn.contains(e.target)) {
+                return;
             }
+            fileInput.click();
+        });
+    }
+
+    if (browseBtn && fileInput) {
+        browseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
         });
     }
 
