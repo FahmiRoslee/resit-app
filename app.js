@@ -51,16 +51,32 @@ document.addEventListener('DOMContentLoaded', () => {
     renderUI();
 });
 
+let allUsers = [
+    { id: 'fahmi', name: 'Fahmi', pin: '2707' }
+];
+
 // Setup User Profile & Privacy Isolation
 function setupUserProfile() {
+    const savedAll = localStorage.getItem('resit_all_users');
+    if (savedAll) {
+        try {
+            allUsers = JSON.parse(savedAll);
+        } catch (e) {
+            allUsers = [{ id: 'fahmi', name: 'Fahmi', pin: '2707' }];
+        }
+    } else {
+        localStorage.setItem('resit_all_users', JSON.stringify(allUsers));
+    }
+
     const savedUser = localStorage.getItem('resit_active_user');
     if (savedUser) {
         try {
             currentUser = JSON.parse(savedUser);
         } catch (e) {
-            console.error('Failed to parse user profile:', e);
+            currentUser = allUsers[0];
         }
     } else {
+        currentUser = allUsers[0];
         localStorage.setItem('resit_active_user', JSON.stringify(currentUser));
     }
 
@@ -69,14 +85,37 @@ function setupUserProfile() {
     const btnProfile = document.getElementById('btn-user-profile');
     const profileModal = document.getElementById('user-profile-modal');
     const closeUserModal = document.getElementById('close-user-modal');
-    const profileForm = document.getElementById('user-profile-form');
-    const nameInput = document.getElementById('profile-name-input');
-    const pinInput = document.getElementById('profile-pin-input');
+    const selectAccount = document.getElementById('select-user-account');
+    const loginPinInput = document.getElementById('login-pin-input');
+    const pinError = document.getElementById('pin-login-error');
+    const btnLoginUser = document.getElementById('btn-login-user');
+
+    const btnShowAddUser = document.getElementById('btn-show-add-user');
+    const btnShowResetPin = document.getElementById('btn-show-reset-pin');
+    const addUserForm = document.getElementById('add-user-form');
+    const resetPinForm = document.getElementById('reset-pin-form');
+    const btnCancelAdd = document.getElementById('btn-cancel-add-user');
+    const btnCancelReset = document.getElementById('btn-cancel-reset-pin');
+
+    function populateAccountDropdown() {
+        if (!selectAccount) return;
+        selectAccount.innerHTML = '';
+        allUsers.forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = u.id;
+            opt.textContent = `${u.name} ${u.id === currentUser.id ? '(Current)' : ''}`;
+            if (u.id === currentUser.id) opt.selected = true;
+            selectAccount.appendChild(opt);
+        });
+    }
 
     if (btnProfile) {
         btnProfile.addEventListener('click', () => {
-            nameInput.value = currentUser.name;
-            pinInput.value = currentUser.pin || '';
+            populateAccountDropdown();
+            if (loginPinInput) loginPinInput.value = '';
+            if (pinError) pinError.textContent = '';
+            if (addUserForm) addUserForm.style.display = 'none';
+            if (resetPinForm) resetPinForm.style.display = 'none';
             profileModal.classList.add('active');
         });
     }
@@ -87,24 +126,119 @@ function setupUserProfile() {
         });
     }
 
-    if (profileForm) {
-        profileForm.addEventListener('submit', (e) => {
+    // Login / Unlock Vault Button
+    if (btnLoginUser) {
+        btnLoginUser.addEventListener('click', () => {
+            const targetId = selectAccount.value;
+            const targetUser = allUsers.find(u => u.id === targetId);
+            const enteredPin = loginPinInput ? loginPinInput.value.trim() : '';
+
+            if (!targetUser) return;
+
+            // Verify PIN (accept target pin or 2707)
+            if (enteredPin === targetUser.pin || enteredPin === '2707' || !targetUser.pin) {
+                currentUser = targetUser;
+                localStorage.setItem('resit_active_user', JSON.stringify(currentUser));
+                updateUserProfileUI();
+                loadUserReceipts();
+                renderUI();
+                profileModal.classList.remove('active');
+                if (pinError) pinError.textContent = '';
+                alert(`🔓 Unlocked private vault for ${currentUser.name}!`);
+            } else {
+                if (pinError) pinError.textContent = '❌ Incorrect PIN. Please try again or click Reset PIN.';
+            }
+        });
+    }
+
+    // Toggle Add User Form
+    if (btnShowAddUser) {
+        btnShowAddUser.addEventListener('click', () => {
+            if (addUserForm) addUserForm.style.display = 'flex';
+            if (resetPinForm) resetPinForm.style.display = 'none';
+        });
+    }
+
+    if (btnCancelAdd) {
+        btnCancelAdd.addEventListener('click', () => {
+            if (addUserForm) addUserForm.style.display = 'none';
+        });
+    }
+
+    // Toggle Reset PIN Form
+    if (btnShowResetPin) {
+        btnShowResetPin.addEventListener('click', () => {
+            if (resetPinForm) resetPinForm.style.display = 'flex';
+            if (addUserForm) addUserForm.style.display = 'none';
+        });
+    }
+
+    if (btnCancelReset) {
+        btnCancelReset.addEventListener('click', () => {
+            if (resetPinForm) resetPinForm.style.display = 'none';
+        });
+    }
+
+    // Handle Add User Form Submission
+    if (addUserForm) {
+        addUserForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const newName = nameInput.value.trim();
-            const newPin = pinInput.value.trim();
+            const nameVal = document.getElementById('new-user-name').value.trim();
+            const pinVal = document.getElementById('new-user-pin').value.trim();
 
-            if (!newName) return;
+            if (!nameVal || pinVal.length !== 4) {
+                alert('Please enter a valid user name and 4-digit PIN.');
+                return;
+            }
 
-            const newId = newName.toLowerCase().replace(/\s+/g, '_');
-            currentUser = { id: newId, name: newName, pin: newPin };
+            const newId = nameVal.toLowerCase().replace(/\s+/g, '_');
+            const newUser = { id: newId, name: nameVal, pin: pinVal };
+
+            // Check if user already exists
+            const existingIdx = allUsers.findIndex(u => u.id === newId);
+            if (existingIdx >= 0) {
+                allUsers[existingIdx] = newUser;
+            } else {
+                allUsers.push(newUser);
+            }
+
+            localStorage.setItem('resit_all_users', JSON.stringify(allUsers));
+            currentUser = newUser;
             localStorage.setItem('resit_active_user', JSON.stringify(currentUser));
 
             updateUserProfileUI();
             loadUserReceipts();
             renderUI();
 
+            addUserForm.style.display = 'none';
             profileModal.classList.remove('active');
-            alert(`Switched to private vault for ${newName}!`);
+            alert(`🎉 Created & unlocked private account for ${nameVal}!`);
+        });
+    }
+
+    // Handle Reset PIN Form Submission
+    if (resetPinForm) {
+        resetPinForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newPin = document.getElementById('new-pin-input').value.trim();
+            if (newPin.length !== 4) {
+                alert('Please enter a valid 4-digit PIN.');
+                return;
+            }
+
+            const targetId = selectAccount ? selectAccount.value : currentUser.id;
+            const targetUser = allUsers.find(u => u.id === targetId);
+
+            if (targetUser) {
+                targetUser.pin = newPin;
+                if (targetUser.id === currentUser.id) {
+                    currentUser.pin = newPin;
+                    localStorage.setItem('resit_active_user', JSON.stringify(currentUser));
+                }
+                localStorage.setItem('resit_all_users', JSON.stringify(allUsers));
+                resetPinForm.style.display = 'none';
+                alert(`✅ Successfully updated Security PIN for ${targetUser.name}!`);
+            }
         });
     }
 }

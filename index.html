@@ -246,25 +246,71 @@
             </div>
         </div>
 
-        <!-- User Profile & Security PIN Modal -->
+        <!-- User Account Privacy & Switcher Modal -->
         <div id="user-profile-modal" class="modal">
-            <div class="modal-content">
+            <div class="modal-content" style="max-width: 480px;">
                 <div class="modal-header">
-                    <h3><i class="fa-solid fa-shield-halved"></i> User Privacy Vault Profile</h3>
+                    <h3><i class="fa-solid fa-user-shield"></i> User Account & Vault Privacy</h3>
                     <button class="close-btn" id="close-user-modal">&times;</button>
                 </div>
-                <form id="user-profile-form">
+                
+                <!-- Section 1: Switch Account / Login -->
+                <div id="user-switch-section" style="display: flex; flex-direction: column; gap: 1rem;">
                     <div class="form-group">
-                        <label for="profile-name-input">User Account Name</label>
-                        <input type="text" id="profile-name-input" placeholder="e.g. Fahmi" required>
+                        <label for="select-user-account">Active Private Vault</label>
+                        <select id="select-user-account" class="category-select" style="width: 100%;">
+                            <!-- Dynamically populated -->
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="login-pin-group">
+                        <label for="login-pin-input">Enter Security PIN (4 digits)</label>
+                        <input type="password" id="login-pin-input" placeholder="2707" maxlength="4" pattern="[0-9]{4}">
+                    </div>
+
+                    <div id="pin-login-error" style="font-size: 0.78rem; color: var(--accent-rose);"></div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <button type="button" id="btn-show-add-user" class="btn btn-secondary" style="font-size: 0.8rem;">
+                            <i class="fa-solid fa-user-plus"></i> + Add New User
+                        </button>
+                        <button type="button" id="btn-show-reset-pin" class="btn btn-secondary" style="font-size: 0.8rem;">
+                            <i class="fa-solid fa-key"></i> Reset PIN
+                        </button>
+                        <button type="button" id="btn-login-user" class="btn btn-primary">
+                            <i class="fa-solid fa-unlock"></i> Unlock Vault
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section 2: Add New User Form (Hidden by default) -->
+                <form id="add-user-form" style="display: none; flex-direction: column; gap: 1rem; border-top: 1px solid var(--card-border); padding-top: 1rem;">
+                    <h4><i class="fa-solid fa-user-plus"></i> Create New Private User Account</h4>
+                    <div class="form-group">
+                        <label for="new-user-name">New User Name</label>
+                        <input type="text" id="new-user-name" placeholder="e.g. Nenek, Sister, Alex" required>
                     </div>
                     <div class="form-group">
-                        <label for="profile-pin-input">Private Security PIN (4 digits)</label>
-                        <input type="password" id="profile-pin-input" placeholder="2707" maxlength="4" pattern="[0-9]{4}">
+                        <label for="new-user-pin">Create 4-Digit Security PIN</label>
+                        <input type="password" id="new-user-pin" placeholder="2707" maxlength="4" pattern="[0-9]{4}" required>
                     </div>
-                    <p style="font-size: 0.78rem; color: var(--text-muted);">Receipts are encrypted and isolated per User Account Name. Switching accounts requires your Security PIN.</p>
                     <div class="modal-actions">
-                        <button type="submit" class="btn btn-primary">Save Profile</button>
+                        <button type="button" id="btn-cancel-add-user" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Account</button>
+                    </div>
+                </form>
+
+                <!-- Section 3: Reset PIN Form (Hidden by default) -->
+                <form id="reset-pin-form" style="display: none; flex-direction: column; gap: 1rem; border-top: 1px solid var(--card-border); padding-top: 1rem;">
+                    <h4><i class="fa-solid fa-key"></i> Reset Account Security PIN</h4>
+                    <p style="font-size: 0.78rem; color: var(--text-muted);">Update your 4-digit PIN or restore default PIN (2707).</p>
+                    <div class="form-group">
+                        <label for="new-pin-input">Enter New 4-Digit PIN</label>
+                        <input type="password" id="new-pin-input" placeholder="2707" maxlength="4" pattern="[0-9]{4}" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" id="btn-cancel-reset-pin" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update PIN</button>
                     </div>
                 </form>
             </div>
