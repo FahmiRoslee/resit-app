@@ -1,8 +1,9 @@
-const CACHE_NAME = 'resitku-v1';
+const CACHE_NAME = 'resitku-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/style.css',
+  '/auth.js',
   '/app.js',
   '/manifest.json',
   '/icon-192.png',

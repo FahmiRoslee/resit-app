@@ -60,30 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Setup User Profile & Privacy Isolation (Auth Gate)
+// Setup User Profile & Privacy Isolation (Auth Gate Framework)
 function setupUserProfile() {
-    const savedAll = localStorage.getItem('resit_all_users');
-    if (savedAll) {
-        try {
-            allUsers = JSON.parse(savedAll);
-        } catch (e) {
-            allUsers = [];
-        }
-    } else {
-        allUsers = [];
-    }
-
-    // Check active session authentication
-    const activeSession = sessionStorage.getItem('resit_active_session');
-    if (activeSession) {
-        try {
-            currentUser = JSON.parse(activeSession);
-        } catch (e) {
-            currentUser = null;
-        }
-    } else {
-        currentUser = null;
-    }
+    allUsers = AuthManager.getUsers();
+    currentUser = AuthManager.getActiveSession();
 
     const gateSelectAccount = document.getElementById('gate-select-account');
     const tabAuthLogin = document.getElementById('tab-auth-login');
@@ -94,6 +74,7 @@ function setupUserProfile() {
 
     function populateGateDropdown() {
         if (!gateSelectAccount) return;
+        allUsers = AuthManager.getUsers();
         gateSelectAccount.innerHTML = '<option value="">-- Select Account --</option>';
         allUsers.forEach(u => {
             const opt = document.createElement('option');
@@ -105,6 +86,11 @@ function setupUserProfile() {
 
     populateGateDropdown();
     updateAuthStateUI();
+
+    if (currentUser) {
+        loadUserReceipts();
+        renderUI();
+    }
 
     // Auto switch to Register tab if no users exist yet
     if (allUsers.length === 0 && tabAuthRegister) {
@@ -130,7 +116,7 @@ function setupUserProfile() {
 
     // Handle Gate Log In Form
     if (gateLoginForm) {
-        gateLoginForm.addEventListener('submit', (e) => {
+        gateLoginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const targetId = gateSelectAccount ? gateSelectAccount.value : '';
             const enteredPin = document.getElementById('gate-login-pin').value.trim();
@@ -141,26 +127,23 @@ function setupUserProfile() {
                 return;
             }
 
-            const targetUser = allUsers.find(u => u.id === targetId);
-            if (!targetUser) return;
-
-            if (enteredPin === targetUser.pin) {
-                currentUser = targetUser;
-                sessionStorage.setItem('resit_active_session', JSON.stringify(currentUser));
+            try {
+                currentUser = await AuthManager.authenticateUser(targetId, enteredPin);
                 if (errEl) errEl.textContent = '';
+                document.getElementById('gate-login-pin').value = '';
                 updateAuthStateUI();
                 loadUserReceipts();
                 renderUI();
                 showToast('Unlocked vault for ' + currentUser.name, 'success');
-            } else {
-                if (errEl) errEl.textContent = '❌ Incorrect PIN. Please try again.';
+            } catch (err) {
+                if (errEl) errEl.textContent = `❌ ${err.message}`;
             }
         });
     }
 
     // Handle Gate Register Form
     if (gateRegisterForm) {
-        gateRegisterForm.addEventListener('submit', (e) => {
+        gateRegisterForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const regName = document.getElementById('gate-reg-name').value.trim();
             const regPin = document.getElementById('gate-reg-pin').value.trim();
@@ -171,26 +154,20 @@ function setupUserProfile() {
                 return;
             }
 
-            const newId = regName.toLowerCase().replace(/\s+/g, '_');
-            const newUser = { id: newId, name: regName, pin: regPin };
+            try {
+                currentUser = await AuthManager.registerUser(regName, regPin);
+                if (errEl) errEl.textContent = '';
+                document.getElementById('gate-reg-name').value = '';
+                document.getElementById('gate-reg-pin').value = '';
 
-            const existingIdx = allUsers.findIndex(u => u.id === newId);
-            if (existingIdx >= 0) {
-                allUsers[existingIdx] = newUser;
-            } else {
-                allUsers.push(newUser);
+                populateGateDropdown();
+                updateAuthStateUI();
+                loadUserReceipts();
+                renderUI();
+                showToast('Created vault for ' + regName, 'success');
+            } catch (err) {
+                if (errEl) errEl.textContent = `❌ ${err.message}`;
             }
-
-            localStorage.setItem('resit_all_users', JSON.stringify(allUsers));
-            currentUser = newUser;
-            sessionStorage.setItem('resit_active_session', JSON.stringify(currentUser));
-            if (errEl) errEl.textContent = '';
-
-            populateGateDropdown();
-            updateAuthStateUI();
-            loadUserReceipts();
-            renderUI();
-            showToast('Created vault for ' + regName, 'success');
         });
     }
 
@@ -201,7 +178,7 @@ function setupUserProfile() {
                 const confirmLock = confirm(`Lock vault for ${currentUser.name} and log out?`);
                 if (confirmLock) {
                     currentUser = null;
-                    sessionStorage.removeItem('resit_active_session');
+                    AuthManager.logout();
                     populateGateDropdown();
                     updateAuthStateUI();
                 }
