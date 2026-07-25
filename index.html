@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ResitKu - Smart Receipt Scanner, OCR Data Extractor & Private Expense Vault">
+    <title>🧾 ResitKu - Smart Receipt Scanner & Private Vault</title>
+    
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0F172A">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ResitKu">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- App Header -->
+        <header class="app-header">
+            <div class="header-top">
+                <div class="logo-area">
+                    <div class="logo-icon">🧾</div>
+                    <div class="logo-text">
+                        <h1>ResitKu</h1>
+                        <p>Smart Receipt Scanner & Private Vault</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button id="btn-user-profile" class="icon-btn" title="User Profile & Security PIN">
+                        <i class="fa-solid fa-user-lock"></i>
+                    </button>
+                    <button id="btn-settings" class="icon-btn" title="Cloud Settings">
+                        <i class="fa-solid fa-cloud"></i>
+                    </button>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div id="user-privacy-badge" class="user-privacy-badge">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span id="user-profile-name">Private Vault: Fahmi</span>
+                </div>
+                <span id="cloud-sync-badge" style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-database"></i> Local Encrypted Storage</span>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="app-nav">
+            <button class="nav-link active" data-tab="scanner">
+                <i class="fa-solid fa-camera-retro"></i> Scan Receipt
+            </button>
+            <button class="nav-link" data-tab="vault">
+                <i class="fa-solid fa-vault"></i> Receipt Vault
+            </button>
+            <button class="nav-link" data-tab="analytics">
+                <i class="fa-solid fa-chart-pie"></i> Analytics
+            </button>
+            <button class="nav-link" data-tab="export">
+                <i class="fa-solid fa-file-export"></i> Export
+            </button>
+        </nav>
+
+        <!-- Main Content Panes -->
+        <main class="app-content">
+            <!-- Pane 1: Scanner -->
+            <section id="content-scanner" class="tab-pane active">
+                <div class="scanner-card">
+                    <h2>Scan & Capture Receipt</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Snap a photo of your physical receipt. Our smart OCR engine will automatically extract the shop name, total amount, date, and category!</p>
+                    
+                    <div class="drop-zone" id="drop-zone">
+                        <div class="drop-icon">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                        <h3>Tap to Capture or Upload Receipt</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Supports Camera & Photos (JPG, PNG, WEBP)</p>
+                        <input type="file" id="receipt-file-input" accept="image/*" capture="environment" style="display: none;">
+                        <button type="button" class="btn-capture" id="btn-browse-file">
+                            <i class="fa-solid fa-camera"></i> Take Photo / Choose File
+                        </button>
+                    </div>
+
+                    <!-- OCR Progress Indicator -->
+                    <div id="ocr-progress-box" class="ocr-progress-box">
+                        <div class="ocr-status-text">
+                            <span id="ocr-status-label"><i class="fa-solid fa-spinner fa-spin"></i> Scanning receipt text with OCR...</span>
+                            <span id="ocr-percent">0%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div id="ocr-progress-fill" class="progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <!-- Scan Preview & Form Modal Section -->
+                    <div id="scan-result-card" style="display: none; background: rgba(0,0,0,0.25); border-radius: 16px; padding: 1.2rem; border: 1px solid var(--card-border);">
+                        <h3 style="margin-bottom: 1rem; color: var(--accent-emerald);"><i class="fa-solid fa-wand-magic-sparkles"></i> Extracted Receipt Data</h3>
+                        <div style="display: flex; gap: 1.2rem; flex-wrap: wrap;">
+                            <img id="scan-preview-img" style="width: 140px; height: 160px; object-fit: cover; border-radius: 12px; border: 1px solid var(--card-border);" alt="Scan preview">
+                            
+                            <form id="save-receipt-form" style="flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 0.75rem;">
+                                <div class="form-group">
+                                    <label for="edit-merchant">Merchant / Shop Name</label>
+                                    <input type="text" id="edit-merchant" placeholder="e.g. Lotus's, Petronas, Watsons" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit-amount">Total Amount (RM)</label>
+                                    <input type="number" step="0.01" id="edit-amount" placeholder="0.00" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit-date">Transaction Date</label>
+                                    <input type="date" id="edit-date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit-category">Category</label>
+                                    <select id="edit-category" required>
+                                        <option value="groceries">Groceries 🛒</option>
+                                        <option value="fuel">Fuel & Petrol ⛽</option>
+                                        <option value="medical">Medical & Pharmacy 💊</option>
+                                        <option value="dining">Dining & Food 🍔</option>
+                                        <option value="utilities">Utilities & Bills 💡</option>
+                                        <option value="shopping">Shopping 🛍️</option>
+                                        <option value="other">Other 📦</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">
+                                    <i class="fa-solid fa-lock"></i> Save to My Private Vault
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pane 2: Private Vault -->
+            <section id="content-vault" class="tab-pane">
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                        <h2>Private Receipt Vault</h2>
+                        <span id="vault-count-badge" style="font-size: 0.82rem; color: var(--accent-cyan); font-weight: 600;">0 Receipts Stored</span>
+                    </div>
+
+                    <!-- Search & Filter Bar -->
+                    <div class="filter-bar">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="vault-search-input" placeholder="Search merchant or item...">
+                        </div>
+                        <select id="vault-category-filter" class="category-select">
+                            <option value="all">All Categories</option>
+                            <option value="groceries">Groceries 🛒</option>
+                            <option value="fuel">Fuel & Petrol ⛽</option>
+                            <option value="medical">Medical & Pharmacy 💊</option>
+                            <option value="dining">Dining & Food 🍔</option>
+                            <option value="utilities">Utilities & Bills 💡</option>
+                            <option value="shopping">Shopping 🛍️</option>
+                            <option value="other">Other 📦</option>
+                        </select>
+                    </div>
+
+                    <!-- Receipts Cards Grid -->
+                    <div id="receipts-grid" class="receipts-grid">
+                        <!-- Rendered dynamically by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pane 3: Analytics -->
+            <section id="content-analytics" class="tab-pane">
+                <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    <h2>Monthly Spending Analytics</h2>
+                    
+                    <div class="analytics-summary">
+                        <div class="stat-card">
+                            <span class="stat-label">Total Spent This Month</span>
+                            <span class="stat-value" id="stat-total-spent">RM 0.00</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">Total Receipts Scanned</span>
+                            <span class="stat-value" id="stat-total-count" style="color: var(--primary);">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">Average Receipt Value</span>
+                            <span class="stat-value" id="stat-avg-value" style="color: var(--accent-amber);">RM 0.00</span>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px; padding: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem;">Spending by Category</h3>
+                        <div id="category-chart-container" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                            <!-- Category progress bars rendered by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pane 4: Export -->
+            <section id="content-export" class="tab-pane">
+                <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+                    <h2>Export & Backup Receipts</h2>
+                    <p style="font-size: 0.88rem; color: var(--text-muted);">Download your private receipt logs for tax filing, budgeting, or spreadsheet accounting.</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+                        <button type="button" id="btn-export-csv" class="btn btn-primary" style="padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-file-csv" style="font-size: 1.8rem;"></i>
+                            <span>Export as CSV Spreadsheet</span>
+                        </button>
+                        <button type="button" id="btn-export-json" class="btn btn-secondary" style="padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-file-code" style="font-size: 1.8rem;"></i>
+                            <span>Backup Raw JSON Vault</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Receipt Detail Viewer Modal -->
+        <div id="view-receipt-modal" class="modal">
+            <div class="modal-content" style="max-width: 550px;">
+                <div class="modal-header">
+                    <h3 id="modal-merchant-title">Receipt Details</h3>
+                    <button class="close-btn" id="close-view-modal">&times;</button>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <img id="modal-receipt-img" style="width: 100%; max-height: 320px; object-fit: contain; background: #000; border-radius: 14px;" alt="Receipt Image">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span id="modal-category-tag" class="category-tag">Category</span>
+                        <span id="modal-amount-display" style="font-size: 1.4rem; font-weight: 800; color: var(--accent-emerald);">RM 0.00</span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                        <span>Date: <strong id="modal-date-display" style="color: #fff;">-</strong></span>
+                        <span>User: <strong id="modal-user-display" style="color: var(--primary);">-</strong></span>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="btn-delete-receipt" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete Receipt</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Profile & Security PIN Modal -->
+        <div id="user-profile-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-shield-halved"></i> User Privacy Vault Profile</h3>
+                    <button class="close-btn" id="close-user-modal">&times;</button>
+                </div>
+                <form id="user-profile-form">
+                    <div class="form-group">
+                        <label for="profile-name-input">User Account Name</label>
+                        <input type="text" id="profile-name-input" placeholder="e.g. Fahmi" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-pin-input">Private Security PIN (4 digits)</label>
+                        <input type="password" id="profile-pin-input" placeholder="2707" maxlength="4" pattern="[0-9]{4}">
+                    </div>
+                    <p style="font-size: 0.78rem; color: var(--text-muted);">Receipts are encrypted and isolated per User Account Name. Switching accounts requires your Security PIN.</p>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn btn-primary">Save Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tesseract OCR Engine & Application JS -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
