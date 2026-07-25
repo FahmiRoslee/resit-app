@@ -72,60 +72,6 @@
 
         <!-- Main Content Panes -->
         <main class="app-content">
-            <!-- Auth Gate Screen (Disabled / Commented out) -->
-            <!--
-            <section id="auth-gate-screen" class="tab-pane" style="display: none;">
-                <div class="scanner-card auth-card">
-                    <div class="logo-icon auth-logo-icon">🧾</div>
-                    <h2>Welcome to ResitKu</h2>
-                    <p class="auth-subtitle">Please log in or create a private account to access your receipt scanner and expense vault.</p>
-
-                    <div class="auth-tab-group">
-                        <button type="button" id="tab-auth-login" class="nav-link active btn-full-center">
-                            <i class="fa-solid fa-key"></i> Log In
-                        </button>
-                        <button type="button" id="tab-auth-register" class="nav-link btn-full-center">
-                            <i class="fa-solid fa-user-plus"></i> Create Account
-                        </button>
-                    </div>
-
-                    <!-- Auth Form 1: Log In -->
-                    <form id="gate-login-form" class="auth-form">
-                        <div class="form-group">
-                            <label for="gate-select-account">Select User Account</label>
-                            <select id="gate-select-account" class="category-select full-width" required>
-                                <!-- Populated dynamically -->
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="gate-login-pin">4-Digit Security PIN</label>
-                            <input type="password" id="gate-login-pin" inputmode="numeric" placeholder="••••" maxlength="4" pattern="[0-9]{4}" required>
-                        </div>
-                        <div id="gate-login-error" class="form-error-msg"></div>
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fa-solid fa-unlock"></i> Unlock Private Vault
-                        </button>
-                    </form>
-
-                    <!-- Auth Form 2: Register (Hidden by default) -->
-                    <form id="gate-register-form" class="auth-form auth-form-hidden">
-                        <div class="form-group">
-                            <label for="gate-reg-name">Your Name / Account Name</label>
-                            <input type="text" id="gate-reg-name" placeholder="e.g. User Name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="gate-reg-pin">Create 4-Digit Security PIN</label>
-                            <input type="password" id="gate-reg-pin" inputmode="numeric" placeholder="••••" maxlength="4" pattern="[0-9]{4}" required>
-                        </div>
-                        <div id="gate-reg-error" class="form-error-msg"></div>
-                        <button type="submit" class="btn btn-primary btn-lg btn-success">
-                            <i class="fa-solid fa-user-check"></i> Register & Unlock Vault
-                        </button>
-                    </form>
-                </div>
-            </section>
-            -->
-
             <!-- Pane 1: Scanner -->
             <section id="content-scanner" class="tab-pane active" style="display: block;">
                 <div class="scanner-card">
