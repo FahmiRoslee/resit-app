@@ -36,20 +36,20 @@
                     </div>
                 </div>
                 <div class="header-actions">
-                    <button id="btn-user-profile" class="icon-btn" title="User Profile & Security PIN">
+                    <button id="btn-user-profile" class="icon-btn" title="User Profile & Security PIN" aria-label="User Profile & Security PIN">
                         <i class="fa-solid fa-user-lock"></i>
                     </button>
-                    <button id="btn-settings" class="icon-btn" title="Cloud Settings">
+                    <button id="btn-settings" class="icon-btn" title="Cloud Settings" aria-label="Cloud Settings">
                         <i class="fa-solid fa-cloud"></i>
                     </button>
                 </div>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="header-bottom">
                 <div id="user-privacy-badge" class="user-privacy-badge">
                     <i class="fa-solid fa-shield-halved"></i>
                     <span id="user-profile-name">Private Vault</span>
                 </div>
-                <span id="cloud-sync-badge" style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-database"></i> Local Encrypted Storage</span>
+                <span id="cloud-sync-badge" class="cloud-sync-badge"><i class="fa-solid fa-database"></i> Local Encrypted Storage</span>
             </div>
         </header>
 
@@ -72,51 +72,51 @@
         <!-- Main Content Panes -->
         <main class="app-content">
             <!-- Auth Gate Screen (Shown when currentUser is null) -->
-            <section id="auth-gate-screen" class="tab-pane active" style="display: block;">
-                <div class="scanner-card" style="max-width: 460px; margin: 1rem auto; text-align: center;">
-                    <div class="logo-icon" style="margin: 0 auto; width: 56px; height: 56px; font-size: 1.8rem;">🧾</div>
+            <section id="auth-gate-screen" class="tab-pane active">
+                <div class="scanner-card auth-card">
+                    <div class="logo-icon auth-logo-icon">🧾</div>
                     <h2>Welcome to ResitKu</h2>
-                    <p style="font-size: 0.85rem; color: var(--text-muted);">Please log in or create a private account to access your receipt scanner and expense vault.</p>
+                    <p class="auth-subtitle">Please log in or create a private account to access your receipt scanner and expense vault.</p>
 
-                    <div style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.3rem; border-radius: 12px; margin-top: 0.5rem;">
-                        <button type="button" id="tab-auth-login" class="nav-link active" style="flex: 1; justify-content: center;">
+                    <div class="auth-tab-group">
+                        <button type="button" id="tab-auth-login" class="nav-link active btn-full-center">
                             <i class="fa-solid fa-key"></i> Log In
                         </button>
-                        <button type="button" id="tab-auth-register" class="nav-link" style="flex: 1; justify-content: center;">
+                        <button type="button" id="tab-auth-register" class="nav-link btn-full-center">
                             <i class="fa-solid fa-user-plus"></i> Create Account
                         </button>
                     </div>
 
                     <!-- Auth Form 1: Log In -->
-                    <form id="gate-login-form" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.75rem; text-align: left;">
+                    <form id="gate-login-form" class="auth-form">
                         <div class="form-group">
                             <label for="gate-select-account">Select User Account</label>
-                            <select id="gate-select-account" class="category-select" style="width: 100%;" required>
+                            <select id="gate-select-account" class="category-select full-width" required>
                                 <!-- Populated dynamically -->
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="gate-login-pin">4-Digit Security PIN</label>
-                            <input type="password" id="gate-login-pin" placeholder="••••" maxlength="4" pattern="[0-9]{4}" required>
+                            <input type="password" id="gate-login-pin" inputmode="numeric" placeholder="••••" maxlength="4" pattern="[0-9]{4}" required>
                         </div>
-                        <div id="gate-login-error" style="font-size: 0.78rem; color: var(--accent-rose);"></div>
-                        <button type="submit" class="btn btn-primary" style="padding: 0.8rem; font-size: 0.95rem;">
+                        <div id="gate-login-error" class="form-error-msg"></div>
+                        <button type="submit" class="btn btn-primary btn-lg">
                             <i class="fa-solid fa-unlock"></i> Unlock Private Vault
                         </button>
                     </form>
 
                     <!-- Auth Form 2: Register (Hidden by default) -->
-                    <form id="gate-register-form" style="display: none; flex-direction: column; gap: 1rem; margin-top: 0.75rem; text-align: left;">
+                    <form id="gate-register-form" class="auth-form auth-form-hidden">
                         <div class="form-group">
                             <label for="gate-reg-name">Your Name / Account Name</label>
                             <input type="text" id="gate-reg-name" placeholder="e.g. User Name" required>
                         </div>
                         <div class="form-group">
                             <label for="gate-reg-pin">Create 4-Digit Security PIN</label>
-                            <input type="password" id="gate-reg-pin" placeholder="••••" maxlength="4" pattern="[0-9]{4}" required>
+                            <input type="password" id="gate-reg-pin" inputmode="numeric" placeholder="••••" maxlength="4" pattern="[0-9]{4}" required>
                         </div>
-                        <div id="gate-reg-error" style="font-size: 0.78rem; color: var(--accent-rose);"></div>
-                        <button type="submit" class="btn btn-primary" style="padding: 0.8rem; font-size: 0.95rem; background: var(--accent-emerald);">
+                        <div id="gate-reg-error" class="form-error-msg"></div>
+                        <button type="submit" class="btn btn-primary btn-lg btn-success">
                             <i class="fa-solid fa-user-check"></i> Register & Unlock Vault
                         </button>
                     </form>
@@ -124,27 +124,27 @@
             </section>
 
             <!-- Pane 1: Scanner -->
-            <section id="content-scanner" class="tab-pane" style="display: none;">
+            <section id="content-scanner" class="tab-pane">
                 <div class="scanner-card">
                     <h2>Scan & Capture Receipt</h2>
-                    <p style="font-size: 0.85rem; color: var(--text-muted);">Snap a photo of your physical receipt. Our smart OCR engine will automatically extract the shop name, total amount, date, and category!</p>
+                    <p class="card-description">Snap a photo of your physical receipt. Our smart OCR engine will automatically extract the shop name, total amount, date, and category!</p>
                     
                     <div class="drop-zone" id="drop-zone">
                         <div class="drop-icon">
                             <i class="fa-solid fa-receipt"></i>
                         </div>
                         <h3>Scan Your Receipt</h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted);">Snap with Camera or Upload from Gallery</p>
+                        <p class="drop-subtitle">Snap with Camera or Upload from Gallery</p>
 
                         <!-- Hidden Inputs -->
-                        <input type="file" id="camera-file-input" accept="image/*" capture="environment" style="display: none;">
-                        <input type="file" id="gallery-file-input" accept="image/*" style="display: none;">
+                        <input type="file" id="camera-file-input" accept="image/*" capture="environment" class="hidden-input">
+                        <input type="file" id="gallery-file-input" accept="image/*" class="hidden-input">
 
-                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; width: 100%; margin-top: 0.5rem;">
-                            <button type="button" class="btn-capture" id="btn-open-camera" style="background: linear-gradient(135deg, var(--primary), #4F46E5); flex: 1; min-width: 160px; justify-content: center;">
+                        <div class="capture-actions">
+                            <button type="button" class="btn-capture btn-capture-camera" id="btn-open-camera">
                                 <i class="fa-solid fa-camera"></i> Snap with Camera
                             </button>
-                            <button type="button" class="btn-capture" id="btn-open-gallery" style="background: rgba(255,255,255,0.1); border: 1px solid var(--card-border); flex: 1; min-width: 160px; justify-content: center;">
+                            <button type="button" class="btn-capture btn-capture-gallery" id="btn-open-gallery">
                                 <i class="fa-solid fa-image"></i> Choose Photo / Gallery
                             </button>
                         </div>
@@ -162,12 +162,12 @@
                     </div>
 
                     <!-- Scan Preview & Form Modal Section -->
-                    <div id="scan-result-card" style="display: none; background: rgba(0,0,0,0.25); border-radius: 16px; padding: 1.2rem; border: 1px solid var(--card-border);">
-                        <h3 style="margin-bottom: 1rem; color: var(--accent-emerald);"><i class="fa-solid fa-wand-magic-sparkles"></i> Extracted Receipt Data</h3>
-                        <div style="display: flex; gap: 1.2rem; flex-wrap: wrap;">
-                            <img id="scan-preview-img" style="width: 140px; height: 160px; object-fit: cover; border-radius: 12px; border: 1px solid var(--card-border);" alt="Scan preview">
+                    <div id="scan-result-card" class="scan-result-card">
+                        <h3 class="scan-result-header"><i class="fa-solid fa-wand-magic-sparkles"></i> Extracted Receipt Data</h3>
+                        <div class="scan-result-content">
+                            <img id="scan-preview-img" class="scan-preview-img" alt="Scan preview">
                             
-                            <form id="save-receipt-form" style="flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 0.75rem;">
+                            <form id="save-receipt-form" class="save-receipt-form">
                                 <div class="form-group">
                                     <label for="edit-merchant">Merchant / Shop Name</label>
                                     <input type="text" id="edit-merchant" placeholder="e.g. Lotus's, Petronas, Watsons" required>
@@ -192,7 +192,7 @@
                                         <option value="other">Other 📦</option>
                                     </select>
                                 </div>
-                                <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">
+                                <button type="submit" class="btn btn-primary btn-save">
                                     <i class="fa-solid fa-lock"></i> Save to My Private Vault
                                 </button>
                             </form>
@@ -203,10 +203,10 @@
 
             <!-- Pane 2: Private Vault -->
             <section id="content-vault" class="tab-pane">
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                <div class="vault-container">
+                    <div class="vault-header">
                         <h2>Private Receipt Vault</h2>
-                        <span id="vault-count-badge" style="font-size: 0.82rem; color: var(--accent-cyan); font-weight: 600;">0 Receipts Stored</span>
+                        <span id="vault-count-badge" class="vault-count-badge">0 Receipts Stored</span>
                     </div>
 
                     <!-- Search & Filter Bar -->
@@ -236,7 +236,7 @@
 
             <!-- Pane 3: Analytics -->
             <section id="content-analytics" class="tab-pane">
-                <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <div class="analytics-container">
                     <h2>Monthly Spending Analytics</h2>
                     
                     <div class="analytics-summary">
@@ -246,17 +246,17 @@
                         </div>
                         <div class="stat-card">
                             <span class="stat-label">Total Receipts Scanned</span>
-                            <span class="stat-value" id="stat-total-count" style="color: var(--primary);">0</span>
+                            <span class="stat-value stat-value-primary" id="stat-total-count">0</span>
                         </div>
                         <div class="stat-card">
                             <span class="stat-label">Average Receipt Value</span>
-                            <span class="stat-value" id="stat-avg-value" style="color: var(--accent-amber);">RM 0.00</span>
+                            <span class="stat-value stat-value-amber" id="stat-avg-value">RM 0.00</span>
                         </div>
                     </div>
 
-                    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px; padding: 1.5rem;">
-                        <h3 style="margin-bottom: 1rem;">Spending by Category</h3>
-                        <div id="category-chart-container" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                    <div class="chart-card">
+                        <h3 class="chart-title">Spending by Category</h3>
+                        <div id="category-chart-container" class="category-chart-container">
                             <!-- Category progress bars rendered by JS -->
                         </div>
                     </div>
@@ -265,17 +265,28 @@
 
             <!-- Pane 4: Export -->
             <section id="content-export" class="tab-pane">
-                <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+                <div class="export-card">
                     <h2>Export & Backup Receipts</h2>
-                    <p style="font-size: 0.88rem; color: var(--text-muted);">Download your private receipt logs for tax filing, budgeting, or spreadsheet accounting.</p>
+                    <p class="export-subtitle">Download your private receipt logs for tax filing, budgeting, or spreadsheet accounting.</p>
                     
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
-                        <button type="button" id="btn-export-csv" class="btn btn-primary" style="padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                            <i class="fa-solid fa-file-csv" style="font-size: 1.8rem;"></i>
+                    <!-- Empty State / Vault Summary -->
+                    <div class="export-empty-state">
+                        <div class="export-empty-icon">
+                            <i class="fa-solid fa-file-invoice"></i>
+                        </div>
+                        <div class="export-empty-text">
+                            <h3>Vault Summary</h3>
+                            <p><span id="export-receipt-count">0</span> receipts ready for export</p>
+                        </div>
+                    </div>
+
+                    <div class="export-actions">
+                        <button type="button" id="btn-export-csv" class="btn btn-primary btn-export">
+                            <i class="fa-solid fa-file-csv export-btn-icon"></i>
                             <span>Export as CSV Spreadsheet</span>
                         </button>
-                        <button type="button" id="btn-export-json" class="btn btn-secondary" style="padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                            <i class="fa-solid fa-file-code" style="font-size: 1.8rem;"></i>
+                        <button type="button" id="btn-export-json" class="btn btn-secondary btn-export">
+                            <i class="fa-solid fa-file-code export-btn-icon"></i>
                             <span>Backup Raw JSON Vault</span>
                         </button>
                     </div>
@@ -285,20 +296,20 @@
 
         <!-- Receipt Detail Viewer Modal -->
         <div id="view-receipt-modal" class="modal">
-            <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-content modal-content-lg">
                 <div class="modal-header">
                     <h3 id="modal-merchant-title">Receipt Details</h3>
-                    <button class="close-btn" id="close-view-modal">&times;</button>
+                    <button class="close-btn" id="close-view-modal" aria-label="Close receipt details">&times;</button>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <img id="modal-receipt-img" style="width: 100%; max-height: 320px; object-fit: contain; background: #000; border-radius: 14px;" alt="Receipt Image">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="modal-body">
+                    <img id="modal-receipt-img" class="modal-img" alt="Receipt Image">
+                    <div class="modal-meta-row">
                         <span id="modal-category-tag" class="category-tag">Category</span>
-                        <span id="modal-amount-display" style="font-size: 1.4rem; font-weight: 800; color: var(--accent-emerald);">RM 0.00</span>
+                        <span id="modal-amount-display" class="modal-amount">RM 0.00</span>
                     </div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between;">
-                        <span>Date: <strong id="modal-date-display" style="color: #fff;">-</strong></span>
-                        <span>User: <strong id="modal-user-display" style="color: var(--primary);">-</strong></span>
+                    <div class="modal-meta-footer">
+                        <span>Date: <strong id="modal-date-display" class="text-white">-</strong></span>
+                        <span>User: <strong id="modal-user-display" class="text-primary">-</strong></span>
                     </div>
                 </div>
                 <div class="modal-actions">
@@ -307,75 +318,8 @@
             </div>
         </div>
 
-        <!-- User Account Privacy & Switcher Modal -->
-        <div id="user-profile-modal" class="modal">
-            <div class="modal-content" style="max-width: 480px;">
-                <div class="modal-header">
-                    <h3><i class="fa-solid fa-user-shield"></i> User Account & Vault Privacy</h3>
-                    <button class="close-btn" id="close-user-modal">&times;</button>
-                </div>
-                
-                <!-- Section 1: Switch Account / Login -->
-                <div id="user-switch-section" style="display: flex; flex-direction: column; gap: 1rem;">
-                    <div class="form-group">
-                        <label for="select-user-account">Active Private Vault</label>
-                        <select id="select-user-account" class="category-select" style="width: 100%;">
-                            <!-- Dynamically populated -->
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="login-pin-group">
-                        <label for="login-pin-input">Enter Security PIN (4 digits)</label>
-                        <input type="password" id="login-pin-input" placeholder="••••" maxlength="4" pattern="[0-9]{4}">
-                    </div>
-
-                    <div id="pin-login-error" style="font-size: 0.78rem; color: var(--accent-rose);"></div>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
-                        <button type="button" id="btn-show-add-user" class="btn btn-secondary" style="font-size: 0.8rem;">
-                            <i class="fa-solid fa-user-plus"></i> + Add New User
-                        </button>
-                        <button type="button" id="btn-show-reset-pin" class="btn btn-secondary" style="font-size: 0.8rem;">
-                            <i class="fa-solid fa-key"></i> Reset PIN
-                        </button>
-                        <button type="button" id="btn-login-user" class="btn btn-primary">
-                            <i class="fa-solid fa-unlock"></i> Unlock Vault
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Section 2: Add New User Form (Hidden by default) -->
-                <form id="add-user-form" style="display: none; flex-direction: column; gap: 1rem; border-top: 1px solid var(--card-border); padding-top: 1rem;">
-                    <h4><i class="fa-solid fa-user-plus"></i> Create New Private User Account</h4>
-                    <div class="form-group">
-                        <label for="new-user-name">New User Name</label>
-                        <input type="text" id="new-user-name" placeholder="e.g. Account Name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="new-user-pin">Create 4-Digit Security PIN</label>
-                        <input type="password" id="new-user-pin" placeholder="••••" maxlength="4" pattern="[0-9]{4}" required>
-                    </div>
-                    <div class="modal-actions">
-                        <button type="button" id="btn-cancel-add-user" class="btn btn-secondary">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Create Account</button>
-                    </div>
-                </form>
-
-                <!-- Section 3: Reset PIN Form (Hidden by default) -->
-                <form id="reset-pin-form" style="display: none; flex-direction: column; gap: 1rem; border-top: 1px solid var(--card-border); padding-top: 1rem;">
-                    <h4><i class="fa-solid fa-key"></i> Reset Account Security PIN</h4>
-                    <p style="font-size: 0.78rem; color: var(--text-muted);">Update your 4-digit PIN.</p>
-                    <div class="form-group">
-                        <label for="new-pin-input">Enter New 4-Digit PIN</label>
-                        <input type="password" id="new-pin-input" placeholder="••••" maxlength="4" pattern="[0-9]{4}" required>
-                    </div>
-                    <div class="modal-actions">
-                        <button type="button" id="btn-cancel-reset-pin" class="btn btn-secondary">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Update PIN</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <!-- Toast Notification Container -->
+        <div id="toast-container" class="toast-container"></div>
     </div>
 
     <!-- Tesseract OCR Engine & Application JS -->

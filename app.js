@@ -3,6 +3,16 @@ let userReceipts = [];
 let currentScanImageBase64 = null;
 let activeReceiptForModal = null;
 
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
 // Retailer Classifier dictionary
 const RETAILERS = [
     { name: "Lotus's", category: 'groceries' },
@@ -45,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSettings = document.getElementById('btn-settings');
     if (btnSettings) {
         btnSettings.addEventListener('click', () => {
-            alert('🔒 Private Vault Active\nStorage: Local Encrypted Engine\nUser: ' + (currentUser ? currentUser.name : 'Locked'));
+            showToast('Private Vault Active | Storage: Local | User: ' + (currentUser ? currentUser.name : 'Locked'), 'info');
         });
     }
 });
@@ -141,7 +151,7 @@ function setupUserProfile() {
                 updateAuthStateUI();
                 loadUserReceipts();
                 renderUI();
-                alert(`🔓 Unlocked private vault for ${currentUser.name}!`);
+                showToast('Unlocked vault for ' + currentUser.name, 'success');
             } else {
                 if (errEl) errEl.textContent = '❌ Incorrect PIN. Please try again.';
             }
@@ -180,7 +190,7 @@ function setupUserProfile() {
             updateAuthStateUI();
             loadUserReceipts();
             renderUI();
-            alert(`🎉 Created & unlocked private vault for ${regName}!`);
+            showToast('Created vault for ' + regName, 'success');
         });
     }
 
@@ -300,6 +310,7 @@ function setupScannerEvents() {
         cameraInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
                 processReceiptFile(e.target.files[0]);
+                e.target.value = '';
             }
         });
     }
@@ -308,6 +319,7 @@ function setupScannerEvents() {
         galleryInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
                 processReceiptFile(e.target.files[0]);
+                e.target.value = '';
             }
         });
     }
@@ -414,7 +426,7 @@ function processReceiptFile(file) {
             
             populateScanForm({ merchant: '', amount: '0.00', date: new Date().toISOString().split('T')[0], category: 'groceries' });
             if (resultCard) resultCard.style.display = 'block';
-            alert('Scan completed! Please review and confirm receipt details.');
+            showToast('OCR scan complete. Review details below.', 'info');
         }
     };
 
@@ -515,17 +527,37 @@ function populateScanForm(extracted) {
     document.getElementById('edit-category').value = extracted.category || 'other';
 }
 
+function compressImageForStorage(base64Image) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxW = 800;
+            let w = img.width, h = img.height;
+            if (w > maxW) { h = Math.round((h * maxW) / w); w = maxW; }
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', 0.6));
+        };
+        img.onerror = () => resolve(base64Image);
+        img.src = base64Image;
+    });
+}
+
 // Save Receipt to Private User Vault
-function saveScannedReceipt() {
+async function saveScannedReceipt() {
     const merchant = document.getElementById('edit-merchant').value.trim();
     const amount = parseFloat(document.getElementById('edit-amount').value);
     const date = document.getElementById('edit-date').value;
     const category = document.getElementById('edit-category').value;
 
     if (!merchant || isNaN(amount)) {
-        alert('Please enter valid merchant name and amount.');
+        showToast('Enter valid merchant name and amount.', 'error');
         return;
     }
+
+    const compressedImage = await compressImageForStorage(currentScanImageBase64);
 
     const newReceipt = {
         id: 'rec_' + Date.now(),
@@ -534,7 +566,7 @@ function saveScannedReceipt() {
         amount: amount,
         date: date,
         category: category,
-        image: currentScanImageBase64,
+        image: compressedImage,
         createdAt: new Date().toISOString()
     };
 
@@ -544,7 +576,7 @@ function saveScannedReceipt() {
 
     document.getElementById('scan-result-card').style.display = 'none';
     currentScanImageBase64 = null;
-    alert(`✅ Receipt saved to ${currentUser.name}'s private vault!`);
+    showToast('Receipt saved to ' + currentUser.name + "'s vault!", 'success');
 
     // Switch tab to vault
     const tabVault = document.querySelector('.nav-link[data-tab="vault"]');
@@ -553,6 +585,7 @@ function saveScannedReceipt() {
 
 // Load & Save Storage Isolation
 function loadUserReceipts() {
+    if (!currentUser) return;
     const storageKey = `resit_user_${currentUser.id}_receipts`;
     const saved = localStorage.getItem(storageKey);
     if (saved) {
@@ -735,35 +768,37 @@ function setupExportEvents() {
     if (btnCsv) {
         btnCsv.addEventListener('click', () => {
             if (userReceipts.length === 0) {
-                alert('No receipts available to export.');
+                showToast('No receipts to export.', 'error');
                 return;
             }
 
-            let csvContent = "data:text/csv;charset=utf-8,ID,Merchant,Amount_RM,Date,Category,User,Scanned_At\n";
+            const csvRows = ["ID,Merchant,Amount_RM,Date,Category,User,Scanned_At"];
             userReceipts.forEach(r => {
-                const row = `"${r.id}","${r.merchant.replace(/"/g, '""')}","${r.amount}","${r.date}","${r.category}","${currentUser.name}","${r.createdAt}"`;
-                csvContent += row + "\n";
+                csvRows.push(`"${r.id}","${r.merchant.replace(/"/g, '""')}","${r.amount}","${r.date}","${r.category}","${currentUser.name}","${r.createdAt}"`);
             });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `ResitKu_${currentUser.name}_Receipts_${new Date().toISOString().split('T')[0]}.csv`);
+            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `ResitKu_${currentUser.name}_Receipts_${new Date().toISOString().split('T')[0]}.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         });
     }
 
     if (btnJson) {
         btnJson.addEventListener('click', () => {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(userReceipts, null, 2));
-            const link = document.createElement("a");
-            link.setAttribute("href", dataStr);
-            link.setAttribute("download", `ResitKu_${currentUser.name}_Vault_Backup.json`);
+            const blob = new Blob([JSON.stringify(userReceipts, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `ResitKu_${currentUser.name}_Vault_Backup.json`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         });
     }
 }
