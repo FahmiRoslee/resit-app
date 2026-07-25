@@ -47,7 +47,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div id="user-privacy-badge" class="user-privacy-badge">
                     <i class="fa-solid fa-shield-halved"></i>
-                    <span id="user-profile-name">Private Vault: Fahmi</span>
+                    <span id="user-profile-name">Private Vault</span>
                 </div>
                 <span id="cloud-sync-badge" style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-database"></i> Local Encrypted Storage</span>
             </div>
@@ -97,7 +97,7 @@
                         </div>
                         <div class="form-group">
                             <label for="gate-login-pin">4-Digit Security PIN</label>
-                            <input type="password" id="gate-login-pin" placeholder="2707" maxlength="4" pattern="[0-9]{4}" required>
+                            <input type="password" id="gate-login-pin" placeholder="••••" maxlength="4" pattern="[0-9]{4}" required>
                         </div>
                         <div id="gate-login-error" style="font-size: 0.78rem; color: var(--accent-rose);"></div>
                         <button type="submit" class="btn btn-primary" style="padding: 0.8rem; font-size: 0.95rem;">
@@ -109,11 +109,11 @@
                     <form id="gate-register-form" style="display: none; flex-direction: column; gap: 1rem; margin-top: 0.75rem; text-align: left;">
                         <div class="form-group">
                             <label for="gate-reg-name">Your Name / Account Name</label>
-                            <input type="text" id="gate-reg-name" placeholder="e.g. Fahmi, Alex, Nenek" required>
+                            <input type="text" id="gate-reg-name" placeholder="e.g. User Name" required>
                         </div>
                         <div class="form-group">
                             <label for="gate-reg-pin">Create 4-Digit Security PIN</label>
-                            <input type="password" id="gate-reg-pin" placeholder="2707" maxlength="4" pattern="[0-9]{4}" required>
+                            <input type="password" id="gate-reg-pin" placeholder="••••" maxlength="4" pattern="[0-9]{4}" required>
                         </div>
                         <div id="gate-reg-error" style="font-size: 0.78rem; color: var(--accent-rose);"></div>
                         <button type="submit" class="btn btn-primary" style="padding: 0.8rem; font-size: 0.95rem; background: var(--accent-emerald);">
@@ -317,7 +317,7 @@
 
                     <div class="form-group" id="login-pin-group">
                         <label for="login-pin-input">Enter Security PIN (4 digits)</label>
-                        <input type="password" id="login-pin-input" placeholder="2707" maxlength="4" pattern="[0-9]{4}">
+                        <input type="password" id="login-pin-input" placeholder="••••" maxlength="4" pattern="[0-9]{4}">
                     </div>
 
                     <div id="pin-login-error" style="font-size: 0.78rem; color: var(--accent-rose);"></div>
@@ -340,11 +340,11 @@
                     <h4><i class="fa-solid fa-user-plus"></i> Create New Private User Account</h4>
                     <div class="form-group">
                         <label for="new-user-name">New User Name</label>
-                        <input type="text" id="new-user-name" placeholder="e.g. Nenek, Sister, Alex" required>
+                        <input type="text" id="new-user-name" placeholder="e.g. Account Name" required>
                     </div>
                     <div class="form-group">
                         <label for="new-user-pin">Create 4-Digit Security PIN</label>
-                        <input type="password" id="new-user-pin" placeholder="2707" maxlength="4" pattern="[0-9]{4}" required>
+                        <input type="password" id="new-user-pin" placeholder="••••" maxlength="4" pattern="[0-9]{4}" required>
                     </div>
                     <div class="modal-actions">
                         <button type="button" id="btn-cancel-add-user" class="btn btn-secondary">Cancel</button>
@@ -355,10 +355,10 @@
                 <!-- Section 3: Reset PIN Form (Hidden by default) -->
                 <form id="reset-pin-form" style="display: none; flex-direction: column; gap: 1rem; border-top: 1px solid var(--card-border); padding-top: 1rem;">
                     <h4><i class="fa-solid fa-key"></i> Reset Account Security PIN</h4>
-                    <p style="font-size: 0.78rem; color: var(--text-muted);">Update your 4-digit PIN or restore default PIN (2707).</p>
+                    <p style="font-size: 0.78rem; color: var(--text-muted);">Update your 4-digit PIN.</p>
                     <div class="form-group">
                         <label for="new-pin-input">Enter New 4-Digit PIN</label>
-                        <input type="password" id="new-pin-input" placeholder="2707" maxlength="4" pattern="[0-9]{4}" required>
+                        <input type="password" id="new-pin-input" placeholder="••••" maxlength="4" pattern="[0-9]{4}" required>
                     </div>
                     <div class="modal-actions">
                         <button type="button" id="btn-cancel-reset-pin" class="btn btn-secondary">Cancel</button>

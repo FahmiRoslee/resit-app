@@ -59,11 +59,8 @@ function setupUserProfile() {
         } catch (e) {
             allUsers = [];
         }
-    }
-
-    if (!allUsers || allUsers.length === 0) {
-        allUsers = [{ id: 'fahmi', name: 'Fahmi', pin: '2707' }];
-        localStorage.setItem('resit_all_users', JSON.stringify(allUsers));
+    } else {
+        allUsers = [];
     }
 
     // Check active session authentication
@@ -99,6 +96,11 @@ function setupUserProfile() {
     populateGateDropdown();
     updateAuthStateUI();
 
+    // Auto switch to Register tab if no users exist yet
+    if (allUsers.length === 0 && tabAuthRegister) {
+        tabAuthRegister.click();
+    }
+
     // Toggle Gate Tabs (Log In vs Create Account)
     if (tabAuthLogin && tabAuthRegister) {
         tabAuthLogin.addEventListener('click', () => {
@@ -132,7 +134,7 @@ function setupUserProfile() {
             const targetUser = allUsers.find(u => u.id === targetId);
             if (!targetUser) return;
 
-            if (enteredPin === targetUser.pin || enteredPin === '2707' || !targetUser.pin) {
+            if (enteredPin === targetUser.pin) {
                 currentUser = targetUser;
                 sessionStorage.setItem('resit_active_session', JSON.stringify(currentUser));
                 if (errEl) errEl.textContent = '';
