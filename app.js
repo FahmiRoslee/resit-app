@@ -320,6 +320,52 @@ function setupScannerEvents() {
     }
 }
 
+// Preprocess image for OCR (Canvas Grayscale & High Contrast Binarization)
+function preprocessImageForOCR(base64Image) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const maxWidth = 1200;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            try {
+                const imageData = ctx.getImageData(0, 0, width, height);
+                const data = imageData.data;
+
+                // High Contrast Binarization
+                for (let i = 0; i < data.length; i += 4) {
+                    const avg = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+                    const val = avg > 130 ? 255 : (avg < 90 ? 0 : (avg - 90) * (255 / 40));
+                    data[i] = val;
+                    data[i + 1] = val;
+                    data[i + 2] = val;
+                }
+                ctx.putImageData(imageData, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+            } catch (e) {
+                console.warn('Canvas image processing fallback:', e);
+                resolve(base64Image);
+            }
+        };
+        img.onerror = () => resolve(base64Image);
+        img.src = base64Image;
+    });
+}
+
 // Read Image & Run Tesseract OCR Text Extraction
 function processReceiptFile(file) {
     const reader = new FileReader();
@@ -342,13 +388,16 @@ function processReceiptFile(file) {
                 throw new Error('Tesseract OCR library not loaded.');
             }
 
-            const { data } = await Tesseract.recognize(currentScanImageBase64, 'eng', {
+            if (progressLabel) progressLabel.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles fa-spin"></i> Optimizing image contrast for OCR...`;
+            const processedImage = await preprocessImageForOCR(currentScanImageBase64);
+
+            const { data } = await Tesseract.recognize(processedImage, 'eng', {
                 logger: m => {
                     if (m.status === 'recognizing text' && m.progress) {
                         const pct = Math.round(m.progress * 100);
                         if (progressFill) progressFill.style.width = `${pct}%`;
                         if (progressPercent) progressPercent.textContent = `${pct}%`;
-                        if (progressLabel) progressLabel.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Scanning receipt text... (${pct}%)`;
+                        if (progressLabel) progressLabel.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Extracting text... (${pct}%)`;
                     }
                 }
             });
@@ -363,7 +412,6 @@ function processReceiptFile(file) {
             console.error('OCR Error:', err);
             if (progressBox) progressBox.classList.remove('active');
             
-            // Fallback manual entry
             populateScanForm({ merchant: '', amount: '0.00', date: new Date().toISOString().split('T')[0], category: 'groceries' });
             if (resultCard) resultCard.style.display = 'block';
             alert('Scan completed! Please review and confirm receipt details.');
@@ -375,6 +423,8 @@ function processReceiptFile(file) {
 
 // Smart Parser Regex Extractor
 function parseReceiptText(text) {
+    if (!text) return { merchant: '', amount: '0.00', date: new Date().toISOString().split('T')[0], category: 'other' };
+
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     
     let merchant = '';
@@ -382,9 +432,14 @@ function parseReceiptText(text) {
     let amount = '';
     let date = '';
 
+    // Clean text for OCR typos
+    const cleanText = text
+        .replace(/T0TA1|TOTAl|TOTAI|JUML4H/gi, 'TOTAL')
+        .replace(/R1M|RN/gi, 'RM');
+
     // 1. Merchant & Category Detection
     for (const r of RETAILERS) {
-        if (text.toLowerCase().includes(r.name.toLowerCase())) {
+        if (cleanText.toLowerCase().includes(r.name.toLowerCase())) {
             merchant = r.name;
             category = r.category;
             break;
@@ -392,48 +447,53 @@ function parseReceiptText(text) {
     }
 
     if (!merchant && lines.length > 0) {
-        // Grab first prominent capitalized line
-        for (let i = 0; i < Math.min(5, lines.length); i++) {
+        for (let i = 0; i < Math.min(6, lines.length); i++) {
             const line = lines[i];
-            if (line.length >= 3 && !/tax|receipt|welcome|cashier|tel/i.test(line)) {
+            if (line.length >= 3 && !/tax|receipt|welcome|cashier|tel|sdn|bhd|gst|sst/i.test(line)) {
                 merchant = line.replace(/[^a-zA-Z0-9\s'&.]/g, '').trim();
-                break;
+                if (merchant.length >= 3) break;
             }
         }
     }
 
     if (!merchant) merchant = 'Unknown Merchant';
 
-    // 2. Amount Extraction (Look for TOTAL, RM, JUMLAH)
-    const amountRegex = /(?:TOTAL|JUMLAH|AMOUNT|CASH|NET|RM)\s*[:=]?\s*(?:RM)?\s*(\d+[\.,]\d{2})/i;
-    const amountMatch = text.match(amountRegex);
+    // 2. Total Amount Extraction
+    const totalRegexes = [
+        /(?:GRAND\s*TOTAL|TOTAL\s*AMOUNT|JUMLAH\s*BERSIH|JUMLAH|NETT|CASH|MYDEBIT|VISA|MASTER)\s*[:=]?\s*(?:RM)?\s*(\d+[\.,]\d{2})/i,
+        /(?:TOTAL|AMOUNT)\s*[:=]?\s*(?:RM)?\s*(\d+[\.,]\d{2})/i,
+        /RM\s*(\d+[\.,]\d{2})/i
+    ];
 
-    if (amountMatch) {
-        amount = amountMatch[1].replace(',', '.');
-    } else {
-        // Find highest decimal number matching XX.XX pattern
-        const allDecimals = text.match(/\b\d+\.\d{2}\b/g);
+    for (const regex of totalRegexes) {
+        const match = cleanText.match(regex);
+        if (match) {
+            amount = match[1].replace(',', '.');
+            break;
+        }
+    }
+
+    if (!amount) {
+        const allDecimals = cleanText.match(/\b\d+\.\d{2}\b/g);
         if (allDecimals) {
-            const numVals = allDecimals.map(n => parseFloat(n)).filter(n => !isNaN(n));
+            const numVals = allDecimals.map(n => parseFloat(n)).filter(n => !isNaN(n) && n < 5000);
             if (numVals.length > 0) {
                 amount = Math.max(...numVals).toFixed(2);
             }
         }
     }
 
-    // 3. Date Extraction (DD/MM/YYYY or YYYY-MM-DD)
+    // 3. Date Extraction
     const dateRegex = /\b(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4}|\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})\b/;
-    const dateMatch = text.match(dateRegex);
+    const dateMatch = cleanText.match(dateRegex);
 
     if (dateMatch) {
         const rawDate = dateMatch[1];
         const parts = rawDate.split(/[\/\.-]/);
         if (parts.length === 3) {
             if (parts[0].length === 4) {
-                // YYYY-MM-DD
                 date = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
             } else {
-                // DD/MM/YYYY
                 const year = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
                 date = `${year}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
             }
@@ -444,8 +504,9 @@ function parseReceiptText(text) {
         date = new Date().toISOString().split('T')[0];
     }
 
-    return { merchant, amount, date, category };
+    return { merchant, amount: amount || '0.00', date, category };
 }
+
 
 function populateScanForm(extracted) {
     document.getElementById('edit-merchant').value = extracted.merchant || '';
