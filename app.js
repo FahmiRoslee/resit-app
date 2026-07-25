@@ -227,7 +227,18 @@ function updateAuthStateUI() {
         // Unlocked State
         if (authGateScreen) authGateScreen.style.display = 'none';
         if (appNav) appNav.style.display = 'flex';
+
+        // Default view: Scanner Pane ONLY
         if (scannerPane) scannerPane.style.display = 'block';
+        if (vaultPane) vaultPane.style.display = 'none';
+        if (analyticsPane) analyticsPane.style.display = 'none';
+        if (exportPane) exportPane.style.display = 'none';
+
+        const navLinks = document.querySelectorAll('.app-nav .nav-link');
+        navLinks.forEach((l, idx) => {
+            if (idx === 0) l.classList.add('active');
+            else l.classList.remove('active');
+        });
 
         if (badgeName) badgeName.textContent = `Private Vault: ${currentUser.name}`;
         if (btnProfile) btnProfile.innerHTML = '<i class="fa-solid fa-lock-open"></i>';
@@ -236,18 +247,29 @@ function updateAuthStateUI() {
 
 // Navigation Tabs Handler
 function setupNavigation() {
-    const navLinks = document.querySelectorAll('.nav-link');
-    const tabPanes = document.querySelectorAll('.tab-pane');
+    const navLinks = document.querySelectorAll('.app-nav .nav-link');
 
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
-            navLinks.forEach(l => l.classList.remove('active'));
-            tabPanes.forEach(p => p.classList.remove('active'));
+            const tabName = link.getAttribute('data-tab');
+            if (!tabName) return;
 
+            // Highlight selected nav link
+            navLinks.forEach(l => l.classList.remove('active'));
             link.classList.add('active');
-            const tabId = `content-${link.getAttribute('data-tab')}`;
-            const targetPane = document.getElementById(tabId);
-            if (targetPane) targetPane.classList.add('active');
+
+            // Hide all tab panes strictly
+            const allPaneIds = ['content-scanner', 'content-vault', 'content-analytics', 'content-export'];
+            allPaneIds.forEach(id => {
+                const pane = document.getElementById(id);
+                if (pane) pane.style.display = 'none';
+            });
+
+            // Display target tab pane ONLY
+            const targetPane = document.getElementById(`content-${tabName}`);
+            if (targetPane) {
+                targetPane.style.display = 'block';
+            }
         });
     });
 }
