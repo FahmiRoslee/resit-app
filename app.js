@@ -691,12 +691,6 @@ function renderVaultGrid() {
     filtered.forEach(r => {
         const card = document.createElement('div');
         card.className = 'receipt-card';
-        
-        const tagsHtml = `
-            <span class="category-tag ${r.category}">${r.category}</span>
-            ${r.isTaxDeductible ? '<span class="category-tag" style="background: rgba(16, 185, 129, 0.15); color: #34D399;">🇲🇾 LHDN</span>' : ''}
-            ${r.isBusinessClaim ? '<span class="category-tag" style="background: rgba(6, 182, 212, 0.15); color: #22D3EE;">💼 Claim</span>' : ''}
-        `;
 
         card.innerHTML = `
             <img src="${r.image || 'https://via.placeholder.com/300x150?text=No+Image'}" class="receipt-thumb" alt="${r.merchant}">
@@ -707,7 +701,7 @@ function renderVaultGrid() {
                 </div>
                 <div class="receipt-meta">
                     <span><i class="fa-regular fa-calendar"></i> ${r.date}</span>
-                    <div style="display: flex; gap: 0.3rem; flex-wrap: wrap;">${tagsHtml}</div>
+                    <span class="category-tag ${r.category}">${r.category}</span>
                 </div>
             </div>
         `;
@@ -727,10 +721,7 @@ function openReceiptModal(receipt) {
 
     const catTag = document.getElementById('modal-category-tag');
     if (catTag) {
-        let tagText = receipt.category.toUpperCase();
-        if (receipt.isTaxDeductible) tagText += ' • 🇲🇾 LHDN TAX RELIEF';
-        if (receipt.isBusinessClaim) tagText += ' • 💼 COMPANY CLAIM';
-        catTag.textContent = tagText;
+        catTag.textContent = receipt.category;
         catTag.className = `category-tag ${receipt.category}`;
     }
 
@@ -740,21 +731,16 @@ function openReceiptModal(receipt) {
 // Render Analytics & Spending Charts
 function renderAnalytics() {
     const totalSpentEl = document.getElementById('stat-total-spent');
-    const taxClaimableEl = document.getElementById('stat-tax-claimable');
-    const businessClaimableEl = document.getElementById('stat-business-claimable');
+    const totalCountEl = document.getElementById('stat-total-count');
     const avgValueEl = document.getElementById('stat-avg-value');
     const chartContainer = document.getElementById('category-chart-container');
 
     const totalSpent = userReceipts.reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
-    const totalTax = userReceipts.filter(r => r.isTaxDeductible).reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
-    const totalBusiness = userReceipts.filter(r => r.isBusinessClaim).reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
-    
     const count = userReceipts.length;
     const avg = count > 0 ? totalSpent / count : 0;
 
     if (totalSpentEl) totalSpentEl.textContent = `RM ${totalSpent.toFixed(2)}`;
-    if (taxClaimableEl) taxClaimableEl.textContent = `RM ${totalTax.toFixed(2)}`;
-    if (businessClaimableEl) businessClaimableEl.textContent = `RM ${totalBusiness.toFixed(2)}`;
+    if (totalCountEl) totalCountEl.textContent = count;
     if (avgValueEl) avgValueEl.textContent = `RM ${avg.toFixed(2)}`;
 
     if (!chartContainer) return;

@@ -144,6 +144,8 @@
                                         <option value="other">Other 📦</option>
                                     </select>
                                 </div>
+                                <!-- Tax & Claim Tags (Commented Out) -->
+                                <!--
                                 <div class="form-group">
                                     <label>Tax & Claim Tags</label>
                                     <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.25rem;">
@@ -155,6 +157,7 @@
                                         </label>
                                     </div>
                                 </div>
+                                -->
                                 <button type="submit" class="btn btn-primary btn-save">
                                     <i class="fa-solid fa-lock"></i> Save to My Private Vault
                                 </button>
@@ -185,8 +188,8 @@
                         </div>
                         <select id="vault-category-filter" class="category-select">
                             <option value="all">All Categories</option>
-                            <option value="tax_deductible">🇲🇾 LHDN Tax Relief Only</option>
-                            <option value="business_claim">💼 Company Claim Only</option>
+                            <!-- <option value="tax_deductible">🇲🇾 LHDN Tax Relief Only</option> -->
+                            <!-- <option value="business_claim">💼 Company Claim Only</option> -->
                             <option value="groceries">Groceries 🛒</option>
                             <option value="fuel">Fuel & Petrol ⛽</option>
                             <option value="medical">Medical & Pharmacy 💊</option>
@@ -215,12 +218,8 @@
                             <span class="stat-value" id="stat-total-spent">RM 0.00</span>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-label">LHDN Tax Relief Claimable</span>
-                            <span class="stat-value" id="stat-tax-claimable" style="color: var(--accent-emerald);">RM 0.00</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-label">Company Claims Total</span>
-                            <span class="stat-value" id="stat-business-claimable" style="color: var(--accent-cyan);">RM 0.00</span>
+                            <span class="stat-label">Total Receipts Scanned</span>
+                            <span class="stat-value stat-value-primary" id="stat-total-count">0</span>
                         </div>
                         <div class="stat-card">
                             <span class="stat-label">Average Receipt Value</span>
@@ -257,16 +256,16 @@
                     <div class="export-actions">
                         <button type="button" id="btn-export-csv" class="btn btn-primary btn-export">
                             <i class="fa-solid fa-file-csv export-btn-icon"></i>
-                            <span>Export Full CSV Spreadsheet</span>
+                            <span>Export as CSV Spreadsheet</span>
                         </button>
-                        <button type="button" id="btn-export-lhdn-csv" class="btn btn-primary btn-export" style="background: linear-gradient(135deg, var(--accent-emerald), #059669);">
+                        <!-- <button type="button" id="btn-export-lhdn-csv" class="btn btn-primary btn-export" style="background: linear-gradient(135deg, var(--accent-emerald), #059669);">
                             <i class="fa-solid fa-file-invoice-dollar export-btn-icon"></i>
                             <span>Export LHDN Tax Report (CSV)</span>
-                        </button>
-                        <button type="button" id="btn-export-claim-csv" class="btn btn-primary btn-export" style="background: linear-gradient(135deg, var(--accent-cyan), #0891B2);">
+                        </button> -->
+                        <!-- <button type="button" id="btn-export-claim-csv" class="btn btn-primary btn-export" style="background: linear-gradient(135deg, var(--accent-cyan), #0891B2);">
                             <i class="fa-solid fa-briefcase export-btn-icon"></i>
                             <span>Export Company Claims (CSV)</span>
-                        </button>
+                        </button> -->
                         <button type="button" id="btn-export-json" class="btn btn-secondary btn-export">
                             <i class="fa-solid fa-file-code export-btn-icon"></i>
                             <span>Backup Raw JSON Vault</span>
