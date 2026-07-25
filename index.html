@@ -133,12 +133,21 @@
                         <div class="drop-icon">
                             <i class="fa-solid fa-receipt"></i>
                         </div>
-                        <h3>Tap to Capture or Upload Receipt</h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted);">Supports Camera & Photos (JPG, PNG, WEBP)</p>
-                        <input type="file" id="receipt-file-input" accept="image/*" style="display: none;">
-                        <button type="button" class="btn-capture" id="btn-browse-file">
-                            <i class="fa-solid fa-camera"></i> Take Photo / Choose File
-                        </button>
+                        <h3>Scan Your Receipt</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Snap with Camera or Upload from Gallery</p>
+
+                        <!-- Hidden Inputs -->
+                        <input type="file" id="camera-file-input" accept="image/*" capture="environment" style="display: none;">
+                        <input type="file" id="gallery-file-input" accept="image/*" style="display: none;">
+
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; width: 100%; margin-top: 0.5rem;">
+                            <button type="button" class="btn-capture" id="btn-open-camera" style="background: linear-gradient(135deg, var(--primary), #4F46E5); flex: 1; min-width: 160px; justify-content: center;">
+                                <i class="fa-solid fa-camera"></i> Snap with Camera
+                            </button>
+                            <button type="button" class="btn-capture" id="btn-open-gallery" style="background: rgba(255,255,255,0.1); border: 1px solid var(--card-border); flex: 1; min-width: 160px; justify-content: center;">
+                                <i class="fa-solid fa-image"></i> Choose Photo / Gallery
+                            </button>
+                        </div>
                     </div>
 
                     <!-- OCR Progress Indicator -->

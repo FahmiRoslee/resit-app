@@ -276,30 +276,36 @@ function setupNavigation() {
 
 // Scanner Events & Tesseract OCR Engine
 function setupScannerEvents() {
-    const browseBtn = document.getElementById('btn-browse-file');
-    const fileInput = document.getElementById('receipt-file-input');
-    const dropZone = document.getElementById('drop-zone');
+    const btnCamera = document.getElementById('btn-open-camera');
+    const btnGallery = document.getElementById('btn-open-gallery');
+    const cameraInput = document.getElementById('camera-file-input');
+    const galleryInput = document.getElementById('gallery-file-input');
     const saveForm = document.getElementById('save-receipt-form');
 
-    if (dropZone && fileInput) {
-        dropZone.addEventListener('click', (e) => {
-            // Prevent double trigger if browseBtn was directly clicked
-            if (e.target === browseBtn || browseBtn.contains(e.target)) {
-                return;
-            }
-            fileInput.click();
-        });
-    }
-
-    if (browseBtn && fileInput) {
-        browseBtn.addEventListener('click', (e) => {
+    if (btnCamera && cameraInput) {
+        btnCamera.addEventListener('click', (e) => {
             e.stopPropagation();
-            fileInput.click();
+            cameraInput.click();
         });
     }
 
-    if (fileInput) {
-        fileInput.addEventListener('change', (e) => {
+    if (btnGallery && galleryInput) {
+        btnGallery.addEventListener('click', (e) => {
+            e.stopPropagation();
+            galleryInput.click();
+        });
+    }
+
+    if (cameraInput) {
+        cameraInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                processReceiptFile(e.target.files[0]);
+            }
+        });
+    }
+
+    if (galleryInput) {
+        galleryInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
                 processReceiptFile(e.target.files[0]);
             }
