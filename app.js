@@ -514,6 +514,13 @@ function populateScanForm(extracted) {
     document.getElementById('edit-amount').value = extracted.amount || '';
     document.getElementById('edit-date').value = extracted.date || new Date().toISOString().split('T')[0];
     document.getElementById('edit-category').value = extracted.category || 'other';
+
+    // Auto-detect Tax & Claim suggestions based on category
+    const taxCheck = document.getElementById('edit-tax-deductible');
+    const claimCheck = document.getElementById('edit-business-claim');
+
+    if (taxCheck) taxCheck.checked = (extracted.category === 'medical' || extracted.category === 'shopping');
+    if (claimCheck) claimCheck.checked = (extracted.category === 'fuel' || extracted.category === 'dining');
 }
 
 function compressImageForStorage(base64Image) {
@@ -540,6 +547,8 @@ async function saveScannedReceipt() {
     const amount = parseFloat(document.getElementById('edit-amount').value);
     const date = document.getElementById('edit-date').value;
     const category = document.getElementById('edit-category').value;
+    const isTaxDeductible = document.getElementById('edit-tax-deductible')?.checked || false;
+    const isBusinessClaim = document.getElementById('edit-business-claim')?.checked || false;
 
     if (!merchant || isNaN(amount)) {
         showToast('Enter valid merchant name and amount.', 'error');
@@ -555,6 +564,8 @@ async function saveScannedReceipt() {
         amount: amount,
         date: date,
         category: category,
+        isTaxDeductible: isTaxDeductible,
+        isBusinessClaim: isBusinessClaim,
         image: compressedImage,
         createdAt: new Date().toISOString()
     };
@@ -651,7 +662,14 @@ function renderVaultGrid() {
 
     const filtered = userReceipts.filter(r => {
         const matchSearch = r.merchant.toLowerCase().includes(searchVal);
-        const matchCat = catVal === 'all' || r.category === catVal;
+        let matchCat = true;
+        if (catVal === 'tax_deductible') {
+            matchCat = Boolean(r.isTaxDeductible);
+        } else if (catVal === 'business_claim') {
+            matchCat = Boolean(r.isBusinessClaim);
+        } else if (catVal !== 'all') {
+            matchCat = r.category === catVal;
+        }
         return matchSearch && matchCat;
     });
 
@@ -664,7 +682,7 @@ function renderVaultGrid() {
             <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
                 <i class="fa-solid fa-receipt" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.4;"></i>
                 <h3>No Receipts Found</h3>
-                <p style="font-size: 0.85rem; margin-top: 0.4rem;">Tap "Scan Receipt" to scan your first physical receipt!</p>
+                <p style="font-size: 0.85rem; margin-top: 0.4rem;">Tap "Scan Receipt" to scan or add your first receipt!</p>
             </div>
         `;
         return;
@@ -673,6 +691,13 @@ function renderVaultGrid() {
     filtered.forEach(r => {
         const card = document.createElement('div');
         card.className = 'receipt-card';
+        
+        const tagsHtml = `
+            <span class="category-tag ${r.category}">${r.category}</span>
+            ${r.isTaxDeductible ? '<span class="category-tag" style="background: rgba(16, 185, 129, 0.15); color: #34D399;">🇲🇾 LHDN</span>' : ''}
+            ${r.isBusinessClaim ? '<span class="category-tag" style="background: rgba(6, 182, 212, 0.15); color: #22D3EE;">💼 Claim</span>' : ''}
+        `;
+
         card.innerHTML = `
             <img src="${r.image || 'https://via.placeholder.com/300x150?text=No+Image'}" class="receipt-thumb" alt="${r.merchant}">
             <div class="receipt-body">
@@ -682,7 +707,7 @@ function renderVaultGrid() {
                 </div>
                 <div class="receipt-meta">
                     <span><i class="fa-regular fa-calendar"></i> ${r.date}</span>
-                    <span class="category-tag ${r.category}">${r.category}</span>
+                    <div style="display: flex; gap: 0.3rem; flex-wrap: wrap;">${tagsHtml}</div>
                 </div>
             </div>
         `;
@@ -702,7 +727,10 @@ function openReceiptModal(receipt) {
 
     const catTag = document.getElementById('modal-category-tag');
     if (catTag) {
-        catTag.textContent = receipt.category;
+        let tagText = receipt.category.toUpperCase();
+        if (receipt.isTaxDeductible) tagText += ' • 🇲🇾 LHDN TAX RELIEF';
+        if (receipt.isBusinessClaim) tagText += ' • 💼 COMPANY CLAIM';
+        catTag.textContent = tagText;
         catTag.className = `category-tag ${receipt.category}`;
     }
 
@@ -712,16 +740,21 @@ function openReceiptModal(receipt) {
 // Render Analytics & Spending Charts
 function renderAnalytics() {
     const totalSpentEl = document.getElementById('stat-total-spent');
-    const totalCountEl = document.getElementById('stat-total-count');
+    const taxClaimableEl = document.getElementById('stat-tax-claimable');
+    const businessClaimableEl = document.getElementById('stat-business-claimable');
     const avgValueEl = document.getElementById('stat-avg-value');
     const chartContainer = document.getElementById('category-chart-container');
 
     const totalSpent = userReceipts.reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
+    const totalTax = userReceipts.filter(r => r.isTaxDeductible).reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
+    const totalBusiness = userReceipts.filter(r => r.isBusinessClaim).reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
+    
     const count = userReceipts.length;
     const avg = count > 0 ? totalSpent / count : 0;
 
     if (totalSpentEl) totalSpentEl.textContent = `RM ${totalSpent.toFixed(2)}`;
-    if (totalCountEl) totalCountEl.textContent = count;
+    if (taxClaimableEl) taxClaimableEl.textContent = `RM ${totalTax.toFixed(2)}`;
+    if (businessClaimableEl) businessClaimableEl.textContent = `RM ${totalBusiness.toFixed(2)}`;
     if (avgValueEl) avgValueEl.textContent = `RM ${avg.toFixed(2)}`;
 
     if (!chartContainer) return;
@@ -758,10 +791,24 @@ function renderAnalytics() {
     });
 }
 
-// Export CSV Spreadsheet
+// Export CSV & JSON Data
 function setupExportEvents() {
     const btnCsv = document.getElementById('btn-export-csv');
+    const btnLhdnCsv = document.getElementById('btn-export-lhdn-csv');
+    const btnClaimCsv = document.getElementById('btn-export-claim-csv');
     const btnJson = document.getElementById('btn-export-json');
+
+    function triggerDownload(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
 
     if (btnCsv) {
         btnCsv.addEventListener('click', () => {
@@ -770,33 +817,51 @@ function setupExportEvents() {
                 return;
             }
 
-            const csvRows = ["ID,Merchant,Amount_RM,Date,Category,User,Scanned_At"];
+            const csvRows = ["ID,Merchant,Amount_RM,Date,Category,Tax_Deductible,Company_Claim,User,Scanned_At"];
             userReceipts.forEach(r => {
-                csvRows.push(`"${r.id}","${r.merchant.replace(/"/g, '""')}","${r.amount}","${r.date}","${r.category}","${currentUser.name}","${r.createdAt}"`);
+                csvRows.push(`"${r.id}","${r.merchant.replace(/"/g, '""')}","${r.amount}","${r.date}","${r.category}","${r.isTaxDeductible ? 'YES' : 'NO'}","${r.isBusinessClaim ? 'YES' : 'NO'}","${currentUser.name}","${r.createdAt}"`);
             });
-            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `ResitKu_${currentUser.name}_Receipts_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            triggerDownload(csvRows.join('\n'), `ResitKu_Full_Export_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8;');
+        });
+    }
+
+    if (btnLhdnCsv) {
+        btnLhdnCsv.addEventListener('click', () => {
+            const taxReceipts = userReceipts.filter(r => r.isTaxDeductible);
+            if (taxReceipts.length === 0) {
+                showToast('No LHDN Tax Deductible receipts found.', 'error');
+                return;
+            }
+
+            const csvRows = ["ID,Merchant,Amount_RM,Date,Category,LHDN_Status,User,Scanned_At"];
+            taxReceipts.forEach(r => {
+                csvRows.push(`"${r.id}","${r.merchant.replace(/"/g, '""')}","${r.amount}","${r.date}","${r.category}","LHDN Tax Relief Claimable","${currentUser.name}","${r.createdAt}"`);
+            });
+            triggerDownload(csvRows.join('\n'), `ResitKu_LHDN_Tax_Report_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8;');
+            showToast(`Exported ${taxReceipts.length} LHDN Tax receipts!`, 'success');
+        });
+    }
+
+    if (btnClaimCsv) {
+        btnClaimCsv.addEventListener('click', () => {
+            const claimReceipts = userReceipts.filter(r => r.isBusinessClaim);
+            if (claimReceipts.length === 0) {
+                showToast('No Company Claim receipts found.', 'error');
+                return;
+            }
+
+            const csvRows = ["ID,Merchant,Amount_RM,Date,Category,Claim_Status,User,Scanned_At"];
+            claimReceipts.forEach(r => {
+                csvRows.push(`"${r.id}","${r.merchant.replace(/"/g, '""')}","${r.amount}","${r.date}","${r.category}","Company Claimable","${currentUser.name}","${r.createdAt}"`);
+            });
+            triggerDownload(csvRows.join('\n'), `ResitKu_Company_Claims_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8;');
+            showToast(`Exported ${claimReceipts.length} Company Claim receipts!`, 'success');
         });
     }
 
     if (btnJson) {
         btnJson.addEventListener('click', () => {
-            const blob = new Blob([JSON.stringify(userReceipts, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `ResitKu_${currentUser.name}_Vault_Backup.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            triggerDownload(JSON.stringify(userReceipts, null, 2), `ResitKu_Vault_Backup_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
         });
     }
 }
