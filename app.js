@@ -1,4 +1,9 @@
-let currentUser = null;
+// Default user session (Authentication Gate Disabled for Now)
+let currentUser = {
+    id: 'default_user',
+    name: 'My Vault'
+};
+
 let userReceipts = [];
 let currentScanImageBase64 = null;
 let activeReceiptForModal = null;
@@ -46,21 +51,25 @@ let allUsers = [];
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
-    setupUserProfile();
+    // setupUserProfile(); // Auth Gate Disabled
     setupNavigation();
     setupScannerEvents();
     setupVaultEvents();
     setupExportEvents();
 
+    loadUserReceipts();
+    renderUI();
+
     const btnSettings = document.getElementById('btn-settings');
     if (btnSettings) {
         btnSettings.addEventListener('click', () => {
-            showToast('Private Vault Active | Storage: Local | User: ' + (currentUser ? currentUser.name : 'Locked'), 'info');
+            showToast('Private Vault Active | Local Encrypted Engine', 'info');
         });
     }
 });
 
-// Setup User Profile & Privacy Isolation (Auth Gate Framework)
+/*
+// Setup User Profile & Privacy Isolation (Auth Gate Framework - Commented Out)
 function setupUserProfile() {
     allUsers = AuthManager.getUsers();
     currentUser = AuthManager.getActiveSession();
@@ -92,12 +101,10 @@ function setupUserProfile() {
         renderUI();
     }
 
-    // Auto switch to Register tab if no users exist yet
     if (allUsers.length === 0 && tabAuthRegister) {
         tabAuthRegister.click();
     }
 
-    // Toggle Gate Tabs (Log In vs Create Account)
     if (tabAuthLogin && tabAuthRegister) {
         tabAuthLogin.addEventListener('click', () => {
             tabAuthLogin.classList.add('active');
@@ -114,7 +121,6 @@ function setupUserProfile() {
         });
     }
 
-    // Handle Gate Log In Form
     if (gateLoginForm) {
         gateLoginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -141,7 +147,6 @@ function setupUserProfile() {
         });
     }
 
-    // Handle Gate Register Form
     if (gateRegisterForm) {
         gateRegisterForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -171,7 +176,6 @@ function setupUserProfile() {
         });
     }
 
-    // Lock Session / Switch User Button in Header
     if (btnProfile) {
         btnProfile.addEventListener('click', () => {
             if (currentUser) {
@@ -188,48 +192,20 @@ function setupUserProfile() {
         });
     }
 }
+*/
 
 function updateAuthStateUI() {
     const authGateScreen = document.getElementById('auth-gate-screen');
     const badgeName = document.getElementById('user-profile-name');
     const appNav = document.querySelector('.app-nav');
     const scannerPane = document.getElementById('content-scanner');
-    const vaultPane = document.getElementById('content-vault');
-    const analyticsPane = document.getElementById('content-analytics');
-    const exportPane = document.getElementById('content-export');
-    const btnProfile = document.getElementById('btn-user-profile');
 
-    if (!currentUser) {
-        // Locked State
-        if (authGateScreen) authGateScreen.style.display = 'block';
-        if (appNav) appNav.style.display = 'none';
-        if (scannerPane) scannerPane.style.display = 'none';
-        if (vaultPane) vaultPane.style.display = 'none';
-        if (analyticsPane) analyticsPane.style.display = 'none';
-        if (exportPane) exportPane.style.display = 'none';
+    // Keep app permanently unlocked (Auth Gate Disabled)
+    if (authGateScreen) authGateScreen.style.display = 'none';
+    if (appNav) appNav.style.display = 'flex';
+    if (scannerPane) scannerPane.style.display = 'block';
 
-        if (badgeName) badgeName.textContent = '🔒 Vault Locked (Log in to access)';
-        if (btnProfile) btnProfile.innerHTML = '<i class="fa-solid fa-lock"></i>';
-    } else {
-        // Unlocked State
-        if (authGateScreen) authGateScreen.style.display = 'none';
-        if (appNav) appNav.style.display = 'flex';
-
-        // Default view: Scanner Pane ONLY
-        if (scannerPane) scannerPane.style.display = 'block';
-        if (vaultPane) vaultPane.style.display = 'none';
-        if (analyticsPane) analyticsPane.style.display = 'none';
-        if (exportPane) exportPane.style.display = 'none';
-
-        const navLinks = document.querySelectorAll('.app-nav .nav-link');
-        navLinks.forEach((l, idx) => {
-            if (idx === 0) l.classList.add('active');
-            else l.classList.remove('active');
-        });
-
-        if (badgeName) badgeName.textContent = `Private Vault: ${currentUser.name}`;
-        if (btnProfile) btnProfile.innerHTML = '<i class="fa-solid fa-lock-open"></i>';
-    }
+    if (badgeName) badgeName.textContent = 'Private Vault';
 }
 
 // Navigation Tabs Handler

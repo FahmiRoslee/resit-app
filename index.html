@@ -36,9 +36,10 @@
                     </div>
                 </div>
                 <div class="header-actions">
-                    <button id="btn-user-profile" class="icon-btn" title="User Profile & Security PIN" aria-label="User Profile & Security PIN">
+                    <!-- Auth Lock Button (Disabled / Commented out) -->
+                    <!-- <button id="btn-user-profile" class="icon-btn" title="User Profile & Security PIN" aria-label="User Profile">
                         <i class="fa-solid fa-user-lock"></i>
-                    </button>
+                    </button> -->
                     <button id="btn-settings" class="icon-btn" title="Cloud Settings" aria-label="Cloud Settings">
                         <i class="fa-solid fa-cloud"></i>
                     </button>
@@ -54,7 +55,7 @@
         </header>
 
         <!-- Navigation Tabs -->
-        <nav class="app-nav">
+        <nav class="app-nav" style="display: flex;">
             <button class="nav-link active" data-tab="scanner">
                 <i class="fa-solid fa-camera-retro"></i> Scan Receipt
             </button>
@@ -71,8 +72,9 @@
 
         <!-- Main Content Panes -->
         <main class="app-content">
-            <!-- Auth Gate Screen (Shown when currentUser is null) -->
-            <section id="auth-gate-screen" class="tab-pane active">
+            <!-- Auth Gate Screen (Disabled / Commented out) -->
+            <!--
+            <section id="auth-gate-screen" class="tab-pane" style="display: none;">
                 <div class="scanner-card auth-card">
                     <div class="logo-icon auth-logo-icon">🧾</div>
                     <h2>Welcome to ResitKu</h2>
@@ -122,9 +124,10 @@
                     </form>
                 </div>
             </section>
+            -->
 
             <!-- Pane 1: Scanner -->
-            <section id="content-scanner" class="tab-pane">
+            <section id="content-scanner" class="tab-pane active" style="display: block;">
                 <div class="scanner-card">
                     <h2>Scan & Capture Receipt</h2>
                     <p class="card-description">Snap a photo of your physical receipt. Our smart OCR engine will automatically extract the shop name, total amount, date, and category!</p>
