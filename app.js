@@ -277,12 +277,48 @@ function setupScannerEvents() {
         });
     }
 
+    const btnManual = document.getElementById('btn-manual-entry');
+
+    if (btnManual) {
+        btnManual.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openManualEntryForm();
+        });
+    }
+
     if (saveForm) {
         saveForm.addEventListener('submit', (e) => {
             e.preventDefault();
             saveScannedReceipt();
         });
     }
+}
+
+// Open Manual Entry Receipt Form (Without Photo)
+function openManualEntryForm() {
+    const resultCard = document.getElementById('scan-result-card');
+    const previewImg = document.getElementById('scan-preview-img');
+    const headerTitle = document.querySelector('.scan-result-header');
+
+    // Default SVG receipt placeholder for manual entries
+    currentScanImageBase64 = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200" fill="%23111827"><rect width="300" height="200" rx="16" fill="%231F2937" stroke="%23374151" stroke-width="2"/><text x="50%" y="45%" fill="%239CA3AF" font-family="sans-serif" font-size="32" text-anchor="middle">🧾</text><text x="50%" y="65%" fill="%23D1D5DB" font-family="sans-serif" font-size="14" font-weight="600" text-anchor="middle">Manual Receipt Entry</text></svg>';
+
+    if (previewImg) previewImg.src = currentScanImageBase64;
+    if (headerTitle) headerTitle.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Manual Receipt Entry`;
+
+    populateScanForm({
+        merchant: '',
+        amount: '',
+        date: new Date().toISOString().split('T')[0],
+        category: 'groceries'
+    });
+
+    if (resultCard) resultCard.style.display = 'block';
+
+    setTimeout(() => {
+        const merchantInput = document.getElementById('edit-merchant');
+        if (merchantInput) merchantInput.focus();
+    }, 100);
 }
 
 // Preprocess image for OCR (Canvas Grayscale & High Contrast Binarization)
@@ -563,6 +599,15 @@ function setupVaultEvents() {
     const categoryFilter = document.getElementById('vault-category-filter');
     const closeViewModal = document.getElementById('close-view-modal');
     const btnDelete = document.getElementById('btn-delete-receipt');
+
+    const btnVaultManual = document.getElementById('btn-vault-manual-entry');
+    if (btnVaultManual) {
+        btnVaultManual.addEventListener('click', () => {
+            const scannerTab = document.querySelector('.nav-link[data-tab="scanner"]');
+            if (scannerTab) scannerTab.click();
+            openManualEntryForm();
+        });
+    }
 
     if (searchInput) searchInput.addEventListener('input', () => renderVaultGrid());
     if (categoryFilter) categoryFilter.addEventListener('change', () => renderVaultGrid());

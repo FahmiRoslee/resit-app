@@ -150,6 +150,9 @@
                             <button type="button" class="btn-capture btn-capture-gallery" id="btn-open-gallery">
                                 <i class="fa-solid fa-image"></i> Choose Photo / Gallery
                             </button>
+                            <button type="button" class="btn-capture" id="btn-manual-entry" style="background: rgba(255,255,255,0.08); border: 1px dashed var(--card-border); flex: 1; min-width: 160px; justify-content: center;">
+                                <i class="fa-solid fa-pen-to-square"></i> Enter Manually (No Photo)
+                            </button>
                         </div>
                     </div>
 
@@ -209,7 +212,12 @@
                 <div class="vault-container">
                     <div class="vault-header">
                         <h2>Private Receipt Vault</h2>
-                        <span id="vault-count-badge" class="vault-count-badge">0 Receipts Stored</span>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <button type="button" class="btn btn-secondary" id="btn-vault-manual-entry" style="font-size: 0.8rem;">
+                                <i class="fa-solid fa-pen-to-square"></i> + Add Manually
+                            </button>
+                            <span id="vault-count-badge" class="vault-count-badge">0 Receipts Stored</span>
+                        </div>
                     </div>
 
                     <!-- Search & Filter Bar -->
